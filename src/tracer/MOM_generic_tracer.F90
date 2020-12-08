@@ -201,7 +201,7 @@ contains
        if (g_tracer_is_prog(g_tracer)) then
          call register_tracer(tr_ptr, tr_Reg, param_file, HI, GV, &
                               name=g_tracer_name, longname=longname, units=units, &
-                              registry_diags=.false., &   !### CHANGE TO TRUE?
+                              registry_diags=.true., &   !liao### CHANGE TO TRUE?
                               restart_CS=restart_CS, mandatory=.not.CS%tracers_may_reinit)
        else
          call register_restart_field(tr_ptr, g_tracer_name, .not.CS%tracers_may_reinit, &
