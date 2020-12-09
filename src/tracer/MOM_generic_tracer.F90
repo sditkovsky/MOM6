@@ -524,9 +524,23 @@ contains
         if (g_tracer_is_prog(g_tracer)) then
           do k=1,nk ;do j=jsc,jec ; do i=isc,iec
             h_work(i,j,k) = h_old(i,j,k)
+            !liao
+            g_tracer%boundary_forcing_tend(i,j,k) = 0
+            if (g_tracer%diag_id_boundary_forcing_tend .gt. 0) then
+               g_tracer%boundary_forcing_tend(i,j,k) = g_tracer%field(i,j,k,1)
+            endif
+            !liao
           enddo ; enddo ; enddo
           call applyTracerBoundaryFluxesInOut(G, GV, g_tracer%field(:,:,:,1), G%US%s_to_T*dt, &
                             fluxes, h_work, evap_CFL_limit, minimum_forcing_depth)
+            !liao
+            if (g_tracer%diag_id_boundary_forcing_tend .gt. 0) then
+               do k=1,nk ;do j=jsc,jec ; do i=isc,iec
+                  g_tracer%boundary_forcing_tend(i,j,k)=G%mask2dT(i,j)*(g_tracer%field(i,j,k,1) &
+                   - g_tracer%boundary_forcing_tend(i,j,k))/dt
+               enddo ; enddo ; enddo
+            endif
+            !liao
         endif
 
          !traverse the linked list till hit NULL
