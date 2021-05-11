@@ -545,6 +545,8 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   type(ocean_OBC_type), optional, pointer     :: OBC !< Open boundaries control structure.
   ! Local variables
   real, dimension(SZIB_(G)) :: por_face_areaU_loc !sjd
+  logical :: do_por
+  !real :: por_face_areaU_real
   real :: CFL  ! The CFL number based on the local velocity and grid spacing [nondim]
   real :: curv_3 ! A measure of the thickness curvature over a grid length,
                  ! with the same units as h_in.
@@ -554,7 +556,9 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   logical :: local_open_BC
 
   por_face_areaU_loc(:) = 1.0
-
+  !do_por = .false.
+  !do I=ish-1,ieh ; por_face_areaU_loc(I) = 1.0 ; enddo
+  !por_face_areaU_real = 1.0
   local_open_BC = .false.
   if (present(OBC)) then ; if (associated(OBC)) then
     local_open_BC = OBC%open_u_BCs_exist_globally
@@ -566,7 +570,7 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
       if (vol_CFL) then ; CFL = (u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i,j))
       else ; CFL = u(I) * dt * G%IdxT(i,j) ; endif
       curv_3 = h_L(i) + h_R(i) - 2.0*h(i)
-      if (por_face_areaU_loc(I) < 1.0) then !sjd
+      if (u(I) < 1.0) then !sjd
          uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I)* u(I) * &
               (h_R(i) + CFL * (0.5*(h_L(i) - h_R(i)) + curv_3*(CFL - 1.5)))
       else
@@ -578,7 +582,7 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
       if (vol_CFL) then ; CFL = (-u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i+1,j))
       else ; CFL = -u(I) * dt * G%IdxT(i+1,j) ; endif
       curv_3 = h_L(i+1) + h_R(i+1) - 2.0*h(i+1)
-      if (por_face_areaU_loc(I) < 1.0) then !sjd
+      if (u(I) < 1.0) then !sjd
          uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I) * u(I) * &
               (h_L(i+1) + CFL * (0.5*(h_R(i+1)-h_L(i+1)) + curv_3*(CFL - 1.5)))
       else
