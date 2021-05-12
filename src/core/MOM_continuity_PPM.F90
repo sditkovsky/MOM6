@@ -556,9 +556,7 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   logical :: local_open_BC
 
   por_face_areaU_loc(:) = 1.0
-  !do_por = .false.
-  !do I=ish-1,ieh ; por_face_areaU_loc(I) = 1.0 ; enddo
-  !por_face_areaU_real = 1.0
+
   local_open_BC = .false.
   if (present(OBC)) then ; if (associated(OBC)) then
     local_open_BC = OBC%open_u_BCs_exist_globally
@@ -567,34 +565,24 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   do I=ish-1,ieh ; if (do_I(I)) then
     ! Set new values of uh and duhdu.
     if (u(I) > 0.0) then
-      if (vol_CFL) then ; CFL = (u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i,j))
+      if (vol_CFL) then ; CFL = (u(I) * dt) * (G%dy_Cu(I,j)* por_face_areaU_loc(I) * G%IareaT(i,j))
       else ; CFL = u(I) * dt * G%IdxT(i,j) ; endif
       curv_3 = h_L(i) + h_R(i) - 2.0*h(i)
-      if (u(I) < 1.0) then !sjd
-         uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I)* u(I) * &
-              (h_R(i) + CFL * (0.5*(h_L(i) - h_R(i)) + curv_3*(CFL - 1.5)))
-      else
-      uh(I) = G%dy_Cu(I,j) * u(I) * &
+      uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I)* u(I) * & !sjd
           (h_R(i) + CFL * (0.5*(h_L(i) - h_R(i)) + curv_3*(CFL - 1.5)))
-      endif
       h_marg = h_R(i) + CFL * ((h_L(i) - h_R(i)) + 3.0*curv_3*(CFL - 1.0))
     elseif (u(I) < 0.0) then
-      if (vol_CFL) then ; CFL = (-u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i+1,j))
+      if (vol_CFL) then ; CFL = (-u(I) * dt) * (G%dy_Cu(I,j)* por_face_areaU_loc(I) * G%IareaT(i+1,j))
       else ; CFL = -u(I) * dt * G%IdxT(i+1,j) ; endif
       curv_3 = h_L(i+1) + h_R(i+1) - 2.0*h(i+1)
-      if (u(I) < 1.0) then !sjd
-         uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I) * u(I) * &
-              (h_L(i+1) + CFL * (0.5*(h_R(i+1)-h_L(i+1)) + curv_3*(CFL - 1.5)))
-      else
-      uh(I) = G%dy_Cu(I,j) * u(I) * &
+      uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I) * u(I) * & !sjd
           (h_L(i+1) + CFL * (0.5*(h_R(i+1)-h_L(i+1)) + curv_3*(CFL - 1.5)))
-      endif
       h_marg = h_L(i+1) + CFL * ((h_R(i+1)-h_L(i+1)) + 3.0*curv_3*(CFL - 1.0))
     else
       uh(I) = 0.0
       h_marg = 0.5 * (h_L(i+1) + h_R(i))
     endif
-    duhdu(I) = G%dy_Cu(I,j) * h_marg * visc_rem(I)
+    duhdu(I) = G%dy_Cu(I,j)* por_face_areaU_loc(I) * h_marg * visc_rem(I)
   endif ; enddo
 
   if (local_open_BC) then
@@ -604,11 +592,11 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
       if (l_seg /= OBC_NONE) then
         if (OBC%segment(l_seg)%open) then
           if (OBC%segment(l_seg)%direction == OBC_DIRECTION_E) then
-            uh(I) = G%dy_Cu(I,j) * u(I) * h(i)
-            duhdu(I) = G%dy_Cu(I,j) * h(i) * visc_rem(I)
+            uh(I) = G%dy_Cu(I,j)* por_face_areaU_loc(I) * u(I) * h(i)
+            duhdu(I) = G%dy_Cu(I,j)* por_face_areaU_loc(I) * h(i) * visc_rem(I)
           else
-            uh(I) = G%dy_Cu(I,j) * u(I) * h(i+1)
-            duhdu(I) = G%dy_Cu(I,j) * h(i+1) * visc_rem(I)
+            uh(I) = G%dy_Cu(I,j)* por_face_areaU_loc(I) * u(I) * h(i+1)
+            duhdu(I) = G%dy_Cu(I,j)* por_face_areaU_loc(I) * h(i+1) * visc_rem(I)
           endif
         endif
       endif
