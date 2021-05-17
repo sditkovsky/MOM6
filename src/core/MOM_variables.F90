@@ -293,6 +293,13 @@ end type BT_cont_type
 
 contains
 
+!> pointers to grids modifying cell metric at porous barriers
+!!sjd
+type, public :: porous_barrier_ptrs
+   real, pointer, dimension(:,:,:) :: por_face_areaU => NULL()
+end type porous_barrier_ptrs
+
+
 !> Allocates the fields for the surface (return) properties of
 !! the ocean model. Unused fields are unallocated.
 subroutine allocate_surface_state(sfc_state, G, use_temperature, do_integrals, &
