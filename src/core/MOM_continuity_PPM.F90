@@ -126,7 +126,7 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, uhbt, vhbt, O
 
   ! Local variables
   type(porous_barrier_ptrs) :: pbv !sjd
-  real, dimension(SZIB_(G),SZJ_(G),SZK_(G)) :: por_face_areaU_loc !sjd
+  real, target, dimension(SZIB_(G),SZJ_(G),SZK_(G)) :: por_face_areaU_loc !sjd
   real :: h_min  ! The minimum layer thickness [H ~> m or kg m-2].  h_min could be 0.
   type(loop_bounds_type) :: LB
   integer :: is, ie, js, je, nz, stencil
@@ -273,7 +273,6 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
   logical :: local_Flather_OBC, local_open_BC, is_simple
   type(OBC_segment_type), pointer :: segment => NULL()
 
-  por_face_areaU_loc(:,:,:) = 1.0
 
   use_visc_rem = present(visc_rem_u)
   local_specified_BC = .false. ; set_BT_cont = .false. ; local_Flather_OBC = .false.
@@ -324,7 +323,7 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
       enddo ; endif
       call zonal_flux_layer(u(:,j,k), h_in(:,j,k), h_L(:,j,k), h_R(:,j,k), &
                             uh(:,j,k), duhdu(:,k), visc_rem(:,k), &
-                            dt, G, US, j, ish, ieh, do_I, CS%vol_CFL, pbv%por_face_areaU(:,j,k), OBC)
+                            dt, G, US, j, ish, ieh, do_I, CS%vol_CFL, por_face_areaU(:,j,k), OBC)
       if (local_specified_BC) then
         do I=ish-1,ieh
           l_seg = OBC%segnum_u(I,j)
@@ -437,7 +436,7 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
       if (present(uhbt)) then
         call zonal_flux_adjust(u, h_in, h_L, h_R, uhbt(:,j), uh_tot_0, duhdu_tot_0, du, &
                                du_max_CFL, du_min_CFL, dt, G, US, CS, visc_rem, &
-                               j, ish, ieh, do_I, .true., uh, OBC=OBC)
+                               j, ish, ieh, do_I, por_face_areaU, .true., uh, OBC=OBC)
 
         if (present(u_cor)) then ; do k=1,nz
           do I=ish-1,ieh ; u_cor(I,j,k) = u(I,j,k) + du(I) * visc_rem(I,k) ; enddo
@@ -456,7 +455,7 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
       if (set_BT_cont) then
         call set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0,&
                                du_max_CFL, du_min_CFL, dt, G, US, CS, visc_rem, &
-                               visc_rem_max, j, ish, ieh, do_I)
+                               visc_rem_max, j, ish, ieh, do_I, por_face_areaU)
         if (any_simple_OBC) then
           do I=ish-1,ieh
             l_seg = OBC%segnum_u(I,j)
@@ -515,10 +514,10 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
   if  (set_BT_cont) then ; if (allocated(BT_cont%h_u)) then
     if (present(u_cor)) then
       call zonal_face_thickness(u_cor, h_in, h_L, h_R, BT_cont%h_u, dt, G, US, LB, &
-                                CS%vol_CFL, CS%marginal_faces,pbv%por_face_areaU(:,j,k) ,visc_rem_u, OBC)
+                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k) ,visc_rem_u, OBC)
     else
       call zonal_face_thickness(u, h_in, h_L, h_R, BT_cont%h_u, dt, G, US, LB, &
-                                CS%vol_CFL, CS%marginal_faces,pbv%por_face_areaU(:,j,k) ,visc_rem_u, OBC)
+                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k) ,visc_rem_u, OBC)
     endif
   endif ; endif
 
@@ -560,7 +559,6 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   integer :: l_seg
   logical :: local_open_BC
 
-  por_face_areaU_loc(:) = 1.0
 
   local_open_BC = .false.
   if (present(OBC)) then ; if (associated(OBC)) then
@@ -573,7 +571,7 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
       if (vol_CFL) then ; CFL = (u(I) * dt) * (G%dy_Cu(I,j)* por_face_areaU(I) * G%IareaT(i,j))
       else ; CFL = u(I) * dt * G%IdxT(i,j) ; endif
       curv_3 = h_L(i) + h_R(i) - 2.0*h(i)
-      uh(I) = G%dy_Cu(I,j) * por_face_areaU_loc(I)* u(I) * & !sjd
+      uh(I) = G%dy_Cu(I,j) * por_face_areaU(I)* u(I) * & !sjd
           (h_R(i) + CFL * (0.5*(h_L(i) - h_R(i)) + curv_3*(CFL - 1.5)))
       h_marg = h_R(i) + CFL * ((h_L(i) - h_R(i)) + 3.0*curv_3*(CFL - 1.0))
     elseif (u(I) < 0.0) then
@@ -720,7 +718,7 @@ end subroutine zonal_face_thickness
 !! desired barotropic (layer-summed) transport.
 subroutine zonal_flux_adjust(u, h_in, h_L, h_R, uhbt, uh_tot_0, duhdu_tot_0, &
                              du, du_max_CFL, du_min_CFL, dt, G, US, CS, visc_rem, &
-                             j, ish, ieh, do_I_in, full_precision, uh_3d, OBC)
+                             j, ish, ieh, do_I_in, por_face_areaU, full_precision, uh_3d, OBC)
   type(ocean_grid_type),                     intent(inout) :: G    !< Ocean's grid structure.
   real, dimension(SZIB_(G),SZJ_(G),SZK_(G)), intent(in)    :: u    !< Zonal velocity [L T-1 ~> m s-1].
   real, dimension(SZI_(G),SZJ_(G),SZK_(G)),  intent(in)    :: h_in !< Layer thickness used to
@@ -755,6 +753,7 @@ subroutine zonal_flux_adjust(u, h_in, h_L, h_R, uhbt, uh_tot_0, duhdu_tot_0, &
   integer,                                   intent(in)    :: ieh  !< End of index range.
   logical, dimension(SZIB_(G)),              intent(in)    :: do_I_in     !<
                        !! A logical flag indicating which I values to work on.
+  real, dimension(SZIB_(G), SZJ_(G), SZK_(G)), intent(in) :: por_face_areaU !sjd
   logical,                         optional, intent(in)    :: full_precision !<
                        !! A flag indicating how carefully to iterate.  The
                        !! default is .true. (more accurate).
@@ -884,7 +883,7 @@ end subroutine zonal_flux_adjust
 !! function of barotropic flow to agree closely with the sum of the layer's transports.
 subroutine set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0, &
                              du_max_CFL, du_min_CFL, dt, G, US, CS, visc_rem, &
-                             visc_rem_max, j, ish, ieh, do_I)
+                             visc_rem_max, j, ish, ieh, do_I, por_face_areaU)
   type(ocean_grid_type),                     intent(inout) :: G    !< Ocean's grid structure.
   real, dimension(SZIB_(G),SZJ_(G),SZK_(G)), intent(in)    :: u    !< Zonal velocity [L T-1 ~> m s-1].
   real, dimension(SZI_(G),SZJ_(G),SZK_(G)),  intent(in)    :: h_in !< Layer thickness used to
@@ -917,6 +916,7 @@ subroutine set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0, 
   integer,                                   intent(in)    :: ieh      !< End of index range.
   logical, dimension(SZIB_(G)),              intent(in)    :: do_I     !< A logical flag indicating
                        !! which I values to work on.
+  real, dimension(SZIB_(G), SZJ_(G), SZK_(G)), intent(in) :: por_face_areaU !sjd
   ! Local variables
   real, dimension(SZIB_(G)) :: &
     du0, &        ! The barotropic velocity increment that gives 0 transport [L T-1 ~> m s-1].
@@ -958,7 +958,7 @@ subroutine set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0, 
   do I=ish-1,ieh ; zeros(I) = 0.0 ; enddo
   call zonal_flux_adjust(u, h_in, h_L, h_R, zeros, uh_tot_0, duhdu_tot_0, du0, &
                          du_max_CFL, du_min_CFL, dt, G, US, CS, visc_rem, &
-                         j, ish, ieh, do_I, .true.)
+                         j, ish, ieh, do_I,por_face_areaU, .true.)
 
   ! Determine the westerly- and easterly- fluxes.  Choose a sufficiently
   ! negative velocity correction for the easterly-flux, and a sufficiently

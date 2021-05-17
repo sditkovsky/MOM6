@@ -291,7 +291,6 @@ type, public :: BT_cont_type
   type(group_pass_type) :: pass_FA_uv !< Structure for face area group halo updates
 end type BT_cont_type
 
-contains
 
 !> pointers to grids modifying cell metric at porous barriers
 !!sjd
@@ -299,6 +298,8 @@ type, public :: porous_barrier_ptrs
    real, pointer, dimension(:,:,:) :: por_face_areaU => NULL()
 end type porous_barrier_ptrs
 
+
+contains
 
 !> Allocates the fields for the surface (return) properties of
 !! the ocean model. Unused fields are unallocated.
