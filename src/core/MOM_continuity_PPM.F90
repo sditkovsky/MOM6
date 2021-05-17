@@ -73,7 +73,7 @@ contains
 
 !> Time steps the layer thicknesses, using a monotonically limit, directionally split PPM scheme,
 !! based on Lin (1994).
-subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, uhbt, vhbt, OBC, &
+subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, pbv, uhbt, vhbt, OBC, &
                           visc_rem_u, visc_rem_v, u_cor, v_cor, BT_cont)
   type(ocean_grid_type),   intent(inout) :: G   !< The ocean's grid structure.
   type(continuity_PPM_CS), pointer       :: CS  !< Module's control structure.
@@ -92,6 +92,7 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, uhbt, vhbt, O
   real,                    intent(in)    :: dt  !< Time increment [T ~> s].
   type(verticalGrid_type), intent(in)    :: GV  !< Vertical grid structure.
   type(unit_scale_type),   intent(in)    :: US   !< A dimensional unit scaling type
+  type(porous_barrier_ptrs), intent(in) :: pbv !sjd
   real, dimension(SZIB_(G),SZJ_(G)), &
                  optional, intent(in)    :: uhbt !< The summed volume flux through zonal faces
                                                  !! [H L2 T-1 ~> m3 s-1 or kg s-1].
@@ -125,9 +126,6 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, uhbt, vhbt, O
                              !!  the effective open face areas as a function of barotropic flow.
 
   ! Local variables
-  type(porous_barrier_ptrs) :: pbv !sjd
-  real, target, dimension(SZIB_(G),SZJ_(G),SZK_(G)) :: por_face_areaU_loc !sjd
-  real, target, dimension(SZI_(G),SZJB_(G),SZK_(G)) :: por_face_areaV_loc !sjd
   real :: h_min  ! The minimum layer thickness [H ~> m or kg m-2].  h_min could be 0.
   type(loop_bounds_type) :: LB
   integer :: is, ie, js, je, nz, stencil
@@ -135,9 +133,6 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, uhbt, vhbt, O
 
   logical :: x_first
   is = G%isc ; ie = G%iec ; js = G%jsc ; je = G%jec ; nz = G%ke
-
-  por_face_areaU_loc(:,:,:) = 1.0; pbv%por_face_areaU => por_face_areaU_loc !sjd
-  por_face_areaV_loc(:,:,:) = 1.0; pbv%por_face_areaV => por_face_areaV_loc !sjd
 
   h_min = GV%Angstrom_H
 
