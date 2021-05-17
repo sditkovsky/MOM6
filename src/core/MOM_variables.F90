@@ -296,6 +296,7 @@ end type BT_cont_type
 !!sjd
 type, public :: porous_barrier_ptrs
    real, pointer, dimension(:,:,:) :: por_face_areaU => NULL()
+   real, pointer, dimension(:,:,:) :: por_face_areaV => NULL()
 end type porous_barrier_ptrs
 
 
