@@ -175,6 +175,19 @@ type, public :: ocean_grid_type
   real :: len_lon = 0.  !< The longitudinal (or x-coord) extent of physical domain
   real :: Rad_Earth = 6.378e6 !< The radius of the planet [m].
   real :: max_depth     !< The maximum depth of the ocean in depth units [Z ~> m].
+
+  !sjd arrays to hold porous curvefit parameters
+  integer, allocatable, dimension(:) :: &
+    porous_width_uv     !< whether modified width is u_width (1) or v_width (2) or Null (0)
+  integer, allocatable, dimension(:) :: &
+    porous_width_j, & !< meridional coordinate of modified cell
+    porous_width_i    !< zonal coordinate of modified cell
+  real, allocatable, dimension(:) :: &
+    porous_width_Dmin, & !< spatial minimum of curve fit
+    porous_width_Dmax, & !< spatial maximum of curve fit
+    porous_width_Davg    !< spatial average of cuve fit
+
+
 end type ocean_grid_type
 
 contains
@@ -591,6 +604,16 @@ subroutine allocate_metrics(G)
   allocate(G%gridLatT(jsg:jeg))   ; G%gridLatT(:) = 0.0
   allocate(G%gridLatB(G%JsgB:G%JegB)) ; G%gridLatB(:) = 0.0
 
+
+  !sjd for now, let's allocate for 100 channels
+  allocate(G%porous_width_uv(100))  ; G%porous_width_uv(:) = 0
+  allocate(G%porous_width_j(100))   ; G%porous_width_j(:) = 0
+  allocate(G%porous_width_i(100))   ; G%porous_width_i(:) = 0
+  allocate(G%porous_width_Dmin(100)); G%porous_width_Dmin(:) = 0.0
+  allocate(G%porous_width_Dmax(100)); G%porous_width_Dmax(:) = 0.0
+  allocate(G%porous_width_Davg(100)); G%porous_width_Davg(:) = 0.0
+
+
 end subroutine allocate_metrics
 
 !> Release memory used by the ocean_grid_type and related structures.
@@ -617,6 +640,14 @@ subroutine MOM_grid_end(G)
   DEALLOC_(G%geoLonCv) ; DEALLOC_(G%geoLonBu)
 
   DEALLOC_(G%dx_Cv) ; DEALLOC_(G%dy_Cu)
+
+  !sjd deallocate
+  deallocate(G%porous_width_uv)
+  deallocate(G%porous_width_j)
+  deallocate(G%porous_width_i)
+  deallocate(G%porous_width_Dmin)
+  deallocate(G%porous_width_Dmax)
+  deallocate(G%porous_width_Davg)
 
   DEALLOC_(G%bathyT)  ; DEALLOC_(G%CoriolisBu)
   DEALLOC_(G%dF_dx)  ; DEALLOC_(G%dF_dy)
