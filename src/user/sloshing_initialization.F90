@@ -131,8 +131,8 @@ subroutine sloshing_initialize_thickness ( h, G, GV, US, param_file, just_read_p
     do k = 1,nz+1
 
       weight_z = - 4.0 * ( z_unif(k) + 0.5 )**2 + 1.0
-      !x = G%geoLatT(i,j) / G%len_lat !sjd
-      x = G%geoLonT(i,j) / G%len_lon
+      x = G%geoLatT(i,j) / G%len_lat !sjd
+      !x = G%geoLonT(i,j) / G%len_lon
       if (use_IC_bug) then
         displ(k) = a0 * cos(acos(-1.0)*x) + weight_z * US%m_to_Z
       else
