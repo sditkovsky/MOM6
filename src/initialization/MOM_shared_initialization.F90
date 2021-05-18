@@ -830,6 +830,10 @@ subroutine reset_face_lengths_list(G, param_file, US)
     u_lat => NULL(), u_lon => NULL(), v_lat => NULL(), v_lon => NULL()
   real, pointer, dimension(:) :: &
     u_width => NULL(), v_width => NULL()
+  real, pointer, dimension(:) :: & !porous barrier curve fit params
+    Dmin_u => NULL(), Dmax_u => NULL(), Davg_u => NULL()
+  real, pointer, dimension(:) :: &
+    Dmin_v => NULL(), Dmax_v => NULL(), Davg_v => NULL()
   real    :: m_to_L  ! A unit conversion factor [L m-1 ~> nondim]
   real    :: L_to_m  ! A unit conversion factor [m L-1 ~> nondim]
   real    :: lat, lon     ! The latitude and longitude of a point.
@@ -843,6 +847,9 @@ subroutine reset_face_lengths_list(G, param_file, US)
   integer :: ios, iounit, isu, isv
   integer :: last, num_lines, nl_read, ln, npt, u_pt, v_pt
   integer :: i, j, isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB
+  integer :: count, isu_por, isv_por
+  logical :: found_u_por, found_v_por
+
   isd = G%isd ; ied = G%ied ; jsd = G%jsd ; jed = G%jed
   IsdB = G%IsdB ; IedB = G%IedB ; JsdB = G%JsdB ; JedB = G%JedB
 
@@ -898,6 +905,14 @@ subroutine reset_face_lengths_list(G, param_file, US)
       allocate(v_lat(2,num_lines)) ; v_lat(:,:) = -1e34
       allocate(v_lon(2,num_lines)) ; v_lon(:,:) = -1e34
       allocate(v_width(num_lines)) ; v_width(:) = -1e34
+
+      allocate(Dmin_u(num_lines))    ; Dmin_u(:) = 0.0
+      allocate(Dmax_u(num_lines))    ; Dmax_u(:) = 0.0
+      allocate(Davg_u(num_lines))    ; Davg_u(:) = 0.0
+
+      allocate(Dmin_v(num_lines))    ; Dmin_v(:) = 0.0
+      allocate(Dmax_v(num_lines))    ; Dmax_v(:) = 0.0
+      allocate(Davg_v(num_lines))    ; Davg_v(:) = 0.0
     endif
 
     ! Actually read the lines.
@@ -917,13 +932,21 @@ subroutine reset_face_lengths_list(G, param_file, US)
       line = lines(ln)
       ! Detect keywords
       found_u = .false.; found_v = .false.
+      found_u_por = .false.; found_v_por = .false.
       isu = index(uppercase(line), "U_WIDTH" ); if (isu > 0) found_u = .true.
       isv = index(uppercase(line), "V_WIDTH" ); if (isv > 0) found_v = .true.
+      isu_por = index(uppercase(line), "U_WIDTH_POR" ); if (isu_por > 0) found_u_por = .true.
+      isv_por = index(uppercase(line), "V_WIDTH_POR" ); if (isv_por > 0) found_v_por = .true.
 
       ! Store and check the relevant values.
       if (found_u) then
         u_pt = u_pt + 1
-        read(line(isu+8:),*) u_lon(1:2,u_pt), u_lat(1:2,u_pt), u_width(u_pt)
+        if (found_u_por == .false.) then
+           read(line(isu+8:),*) u_lon(1:2,u_pt), u_lat(1:2,u_pt), u_width(u_pt)
+        elseif (found_u_por) then
+           read(line(isu_por+12:),*) u_lon(1:2,u_pt), u_lat(1:2,u_pt), u_width(u_pt), &
+                Dmin_u(u_pt), Dmax_u(u_pt), Davg_u(u_pt)
+        endif
         if (is_root_PE()) then
           if (check_360) then
             if ((abs(u_lon(1,u_pt)) > len_lon) .or. (abs(u_lon(2,u_pt)) > len_lon)) &
@@ -946,11 +969,20 @@ subroutine reset_face_lengths_list(G, param_file, US)
           if (u_width(u_pt) < 0.0) &
             call MOM_error(WARNING, "reset_face_lengths_list : Negative "//&
                "u-width found when reading line "//trim(line)//" from file "//&
+               trim(filename))                                                                                                                             
+          if (Dmin_u(u_pt) > Dmax_u(u_pt)) &
+            call MOM_error(WARNING, "reset_face_lengths_list : Out-of-order "//&
+               "topographical min/max found when reading line "//trim(line)//" from file "//&
                trim(filename))
         endif
       elseif (found_v) then
         v_pt = v_pt + 1
-        read(line(isv+8:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt)
+        if (found_v_por == .false.) then
+           read(line(isv+8:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt) 
+        elseif (found_v_por) then
+           read(line(isv+12:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt), &
+                Dmin_v(v_pt), Dmax_v(v_pt), Davg_v(v_pt)
+        endif
         if (is_root_PE()) then
           if (check_360) then
             if ((abs(v_lon(1,v_pt)) > len_lon) .or. (abs(v_lon(2,v_pt)) > len_lon)) &
@@ -973,6 +1005,10 @@ subroutine reset_face_lengths_list(G, param_file, US)
           if (v_width(v_pt) < 0.0) &
             call MOM_error(WARNING, "reset_face_lengths_list : Negative "//&
                "v-width found when reading line "//trim(line)//" from file "//&
+               trim(filename))                                                                                                                             
+          if (Dmin_v(v_pt) > Dmax_v(v_pt)) &
+            call MOM_error(WARNING, "reset_face_lengths_list : Out-of-order "//&
+               "topographical min/max found when reading line "//trim(line)//" from file "//&
                trim(filename))
         endif
       endif
@@ -981,6 +1017,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
     deallocate(lines)
   endif
 
+  count = 1
   do j=jsd,jed ; do I=IsdB,IedB
     lat = G%geoLatCu(I,j) ; lon = G%geoLonCu(I,j)
     if (check_360) then ; lon_p = lon+len_lon ; lon_m = lon-len_lon
@@ -993,14 +1030,32 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_m >= u_lon(1,npt)) .and. (lon_m <= u_lon(2,npt)))) ) then
 
         G%dy_Cu(I,j) = G%mask2dCu(I,j) * m_to_L*min(L_to_m*G%dyCu(I,j), max(u_width(npt), 0.0))
+
         if (j>=G%jsc .and. j<=G%jec .and. I>=G%isc .and. I<=G%iec) then ! Limit messages/checking to compute domain
+
           if ( G%mask2dCu(I,j) == 0.0 )  then
             write(*,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCu=0 at ",lat,lon," (",&
                 u_lat(1,npt), u_lat(2,npt), u_lon(1,npt), u_lon(2,npt),") so grid metric is unmodified."
           else
+
+            G%porous_width_uv(count) = 1 !signifies u point 
+            G%porous_width_j(count) = j
+            G%porous_width_i(count) = I
+            G%porous_width_Dmin(count) = Dmin_u(npt)
+            G%porous_width_Dmax(count) = Dmax_u(npt)
+            G%porous_width_Davg(count) = Davg_u(npt)
+            if (Davg_u(npt) == 0.) G%porous_width_uv(count) = 0
+
             write(*,'(A,2F8.2,A,4F8.2,A5,F9.2,A1)') &
                   "read_face_lengths_list : Modifying dy_Cu gridpoint at ",lat,lon," (",&
                   u_lat(1,npt), u_lat(2,npt), u_lon(1,npt), u_lon(2,npt),") to ",L_to_m*G%dy_Cu(I,j),"m"
+
+            write(*,'(A,I4,A,I4,A, I4, A,I4,A,F8.2,A,F8.2,A,F8.2,A)') &
+                  "read_face_lengths_list : Porous Barrier parameters. porous_width_uv:",G%porous_width_uv(count),",count = ",count,",  porous_width_j:",&
+                  G%porous_width_j(count),", porous_width_i:",G%porous_width_i(count),", porous_width_Dmin", G%porous_width_Dmin(count),&
+                  "porous_width_Dmax:",G%porous_width_Dmax(count),", porous_width_Davg:", G%porous_width_Davg(count), "m"
+
+            count = count + 1
           endif
         endif
       endif
@@ -1022,14 +1077,28 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_p >= v_lon(1,npt)) .and. (lon_p <= v_lon(2,npt))) .or. &
            ((lon_m >= v_lon(1,npt)) .and. (lon_m <= v_lon(2,npt)))) ) then
         G%dx_Cv(i,J) = G%mask2dCv(i,J) * m_to_L*min(L_to_m*G%dxCv(i,J), max(v_width(npt), 0.0))
-        if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain
+        if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain 
           if ( G%mask2dCv(i,J) == 0.0 )  then
             write(*,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCv=0 at ",lat,lon," (",&
                   v_lat(1,npt), v_lat(2,npt), v_lon(1,npt), v_lon(2,npt),") so grid metric is unmodified."
           else
+            G%porous_width_uv(count) = 2 !signifies v point
+            G%porous_width_j(count) = J
+            G%porous_width_i(count) = i
+            G%porous_width_Dmin(count) = Dmin_v(npt)
+            G%porous_width_Dmax(count) = Dmax_v(npt)
+            G%porous_width_Davg(count) = Davg_v(npt)
+            if (Davg_v(npt) == 0.) G%porous_width_uv(count) = 0
+
             write(*,'(A,2F8.2,A,4F8.2,A5,F9.2,A1)') &
                   "read_face_lengths_list : Modifying dx_Cv gridpoint at ",lat,lon," (",&
                   v_lat(1,npt), v_lat(2,npt), v_lon(1,npt), v_lon(2,npt),") to ",L_to_m*G%dx_Cv(I,j),"m"
+            write(*,'(A,I4,A,I4,A,I4,A,I4,A,F8.2,A,F8.2,A,F8.2,A)') &
+                  "read_face_lengths_list : Porous Barrier parameters. porous_width_uv:",G%porous_width_uv(count),",count = ",count,",  porous_width_j:",&
+                  G%porous_width_j(count),", porous_width_i:",G%porous_width_i(count),", porous_width_Dmin", G%porous_width_Dmin(count),&
+                  "porous_width_Dmax:",G%porous_width_Dmax(count),", porous_width_Davg:", G%porous_width_Davg(count), "m"
+
+            count = count + 1
           endif
         endif
       endif
@@ -1043,6 +1112,8 @@ subroutine reset_face_lengths_list(G, param_file, US)
   if (num_lines > 0) then
     deallocate(u_lat) ; deallocate(u_lon) ; deallocate(u_width)
     deallocate(v_lat) ; deallocate(v_lon) ; deallocate(v_width)
+    deallocate(Dmin_u) ; deallocate(Dmax_u) ; deallocate(Davg_u)
+    deallocate(Dmin_v) ; deallocate(Dmax_v) ; deallocate(Davg_v)
   endif
 
   call callTree_leave(trim(mdl)//'()')

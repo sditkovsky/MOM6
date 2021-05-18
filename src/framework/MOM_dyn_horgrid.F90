@@ -166,6 +166,16 @@ type, public :: dyn_horgrid_type
   real :: len_lon = 0.  !< The longitudinal (or x-coord) extent of physical domain
   real :: Rad_Earth = 6.378e6 !< The radius of the planet [m].
   real :: max_depth     !< The maximum depth of the ocean [Z ~> m].
+
+  integer, allocatable, dimension(:) :: &
+    porous_width_uv     !< whether modified width is u_width (1) or v_width (2) or Null (0)
+  integer, allocatable, dimension(:) :: &
+    porous_width_j, & !< meridional coordinate of modified cell
+    porous_width_i    !< zonal coordinate of modified cell
+  real, allocatable, dimension(:) :: &
+    porous_width_Dmin, & !< spatial minimum of curve fit [m]
+    porous_width_Dmax, & !< spatial maximum of curve fit [m]
+    porous_width_Davg    !< spatial average of cuve fit [m]
 end type dyn_horgrid_type
 
 contains
@@ -254,6 +264,13 @@ subroutine create_dyn_horgrid(G, HI, bathymetry_at_vel)
   allocate(G%areaCv(isd:ied,JsdB:JedB))  ; G%areaCv(:,:) = 0.0
   allocate(G%IareaCu(IsdB:IedB,jsd:jed)) ; G%IareaCu(:,:) = 0.0
   allocate(G%IareaCv(isd:ied,JsdB:JedB)) ; G%IareaCv(:,:) = 0.0
+
+  allocate(G%porous_width_uv(100))  ; G%porous_width_uv(:) = 0
+  allocate(G%porous_width_j(100))   ; G%porous_width_j(:) = 0
+  allocate(G%porous_width_i(100))   ; G%porous_width_i(:) = 0
+  allocate(G%porous_width_Dmin(100)); G%porous_width_Dmin(:) = 0.0
+  allocate(G%porous_width_Dmax(100)); G%porous_width_Dmax(:) = 0.0
+  allocate(G%porous_width_Davg(100)); G%porous_width_Davg(:) = 0.0
 
   allocate(G%bathyT(isd:ied, jsd:jed)) ; G%bathyT(:,:) = 0.0
   allocate(G%CoriolisBu(IsdB:IedB, JsdB:JedB)) ; G%CoriolisBu(:,:) = 0.0
@@ -415,6 +432,13 @@ subroutine destroy_dyn_horgrid(G)
 
   deallocate(G%Domain%mpp_domain)
   deallocate(G%Domain)
+
+  deallocate(G%porous_width_uv)
+  deallocate(G%porous_width_j)
+  deallocate(G%porous_width_i)
+  deallocate(G%porous_width_Dmin)
+  deallocate(G%porous_width_Dmax)
+  deallocate(G%porous_width_Davg)
 
   deallocate(G)
 
