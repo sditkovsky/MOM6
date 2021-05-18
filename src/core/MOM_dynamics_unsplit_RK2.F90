@@ -236,7 +236,7 @@ subroutine step_MOM_dyn_unsplit_RK2(u_in, v_in, h_in, tv, visc, Time_local, dt, 
   type(MEKE_type),                   pointer       :: MEKE    !< A pointer to a structure containing
                                                               !! fields related to the Mesoscale
                                                               !! Eddy Kinetic Energy.
-  type(porous_barrier_ptrs), intent(in) :: pbv !sjd
+  type(porous_barrier_ptrs), intent(in) :: pbv                !< porous barrier fractional cell metrics
   ! Local variables
   real, dimension(SZI_(G),SZJ_(G),SZK_(G)) :: h_av, hp
   real, dimension(SZIB_(G),SZJ_(G),SZK_(G)) :: up ! Predicted zonal velocities [L T-1 ~> m s-1]

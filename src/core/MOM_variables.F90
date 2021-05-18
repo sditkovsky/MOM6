@@ -293,12 +293,11 @@ end type BT_cont_type
 
 
 !> pointers to grids modifying cell metric at porous barriers
-!!sjd
 type, public :: porous_barrier_ptrs
-   real, pointer, dimension(:,:,:) :: por_face_areaU => NULL()
-   real, pointer, dimension(:,:,:) :: por_face_areaV => NULL()
-   real, pointer, dimension(:,:,:) :: por_layer_widthU => NULL()
-   real, pointer, dimension(:,:,:) :: por_layer_widthV => NULL()
+   real, pointer, dimension(:,:,:) :: por_face_areaU => NULL() !< fractional open area of U-faces [nondim]
+   real, pointer, dimension(:,:,:) :: por_face_areaV => NULL() !< fractional open area of V-faces [nondim]
+   real, pointer, dimension(:,:,:) :: por_layer_widthU => NULL() !< fractional open width of U-faces [nondim]
+   real, pointer, dimension(:,:,:) :: por_layer_widthV => NULL() !< fractional open width of V-faces [nondim]
 end type porous_barrier_ptrs
 
 

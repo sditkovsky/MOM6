@@ -61,20 +61,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
                                                              !! [Z ~> m]
   real, dimension(100),                 intent(in)  :: Davg  !< parameterized topography average depth
                                                              !! [Z ~> m]
-  type(porous_barrier_ptrs),           intent(inout) :: pbv
-  !should the following be intent(out) or inout?
-  !real, dimension(G%IsdB:G%IedB, G%jsd:G%jed, SZK_(G)+1), & 
-  !                                      intent(inout) :: por_layer_widthU !< fractional porous open 
-                                                         !!width of interface on zonal flux grid [nondim] 
-  !real, dimension(G%isd:G%ied, G%JsdB:G%JedB, SZK_(G)+1), & 
-  !                                      intent(inout) :: por_layer_widthV !< fractional porous open
-                                                         !!width of interface on merid. flux grid [nondim]
-  !real, dimension(G%IsdB:G%IedB, G%jsd:G%jed, SZK_(G)), &
-  !                                      intent(inout) :: por_face_areaU   !< fractional porous open
-                                                         !!area on zonal flux grid [nondim]
-  !real, dimension(G%isd:G%ied, G%JsdB:G%JedB, SZK_(G)), &
-  !                                      intent(inout) :: por_face_areaV   !< fractional porous open
-                                                         !!area on merid. flux grid [nondim]
+  type(porous_barrier_ptrs),           intent(inout) :: pbv  !< porous barrier fractional cell metrics
 
   !local variables
   integer ii, i, j, k, nk, isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB

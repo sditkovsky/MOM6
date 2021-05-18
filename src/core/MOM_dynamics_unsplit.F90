@@ -223,7 +223,7 @@ subroutine step_MOM_dyn_unsplit(u, v, h, tv, visc, Time_local, dt, forces, &
                                  !! that specify the spatially variable viscosities.
   type(MEKE_type),         pointer       :: MEKE   !< A pointer to a structure containing
                                  !! fields related to the Mesoscale Eddy Kinetic Energy.
-  type(porous_barrier_ptrs), intent(in) :: pbv !sjd
+  type(porous_barrier_ptrs), intent(in) :: pbv     !< porous barrier fractional cell metrics
   type(wave_parameters_CS), optional, pointer :: Waves !< A pointer to a structure containing
                                  !! fields related to the surface wave conditions
 

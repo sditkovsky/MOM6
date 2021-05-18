@@ -380,12 +380,15 @@ type, public :: MOM_control_struct ; private
   type(ODA_CS), pointer :: odaCS => NULL() !< a pointer to the control structure for handling
                                 !! ensemble model state vectors and data assimilation
                                 !! increments and priors
-  !sjd porous barriers type
-  type(porous_barrier_ptrs) :: pbv !sjd  
-  real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_,NKMEM_) :: por_face_areaU
-  real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_,NKMEM_) :: por_face_areaV
-  real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_,NK_INTERFACE_) :: por_layer_widthU
-  real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_,NK_INTERFACE_) :: por_layer_widthV
+  type(porous_barrier_ptrs) :: pbv !< porous barrier fractional cell metrics  
+  real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_,NKMEM_) &
+                            :: por_face_areaU !< fractional open area of U-faces [nondim]
+  real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_,NKMEM_) &
+                            :: por_face_areaV !< fractional open area of V-faces [nondim]
+  real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_,NK_INTERFACE_) &
+                            :: por_layer_widthU !< fractional open width of U-faces [nondim]
+  real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_,NK_INTERFACE_) &
+                            :: por_layer_widthV !< fractional open width of V-faces [nondim]
 end type MOM_control_struct
 
 public initialize_MOM, finish_MOM_initialization, MOM_end

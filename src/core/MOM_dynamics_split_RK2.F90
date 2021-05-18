@@ -280,7 +280,7 @@ subroutine step_MOM_dyn_split_RK2(u, v, h, tv, visc, Time_local, dt, forces, p_s
   type(MEKE_type),                   pointer       :: MEKE         !< related to mesoscale eddy kinetic energy param
   type(thickness_diffuse_CS),        pointer       :: thickness_diffuse_CSp !< Pointer to a structure containing
                                                                    !! interface height diffusivities
-  type(porous_barrier_ptrs), intent(in) :: pbv !sjd
+  type(porous_barrier_ptrs),         intent(in)    :: pbv          !< porous barrier fractional cell metrics
   type(wave_parameters_CS), optional, pointer      :: Waves        !< A pointer to a structure containing
                                                                    !! fields related to the surface wave conditions
 
@@ -1115,7 +1115,7 @@ subroutine initialize_dyn_split_RK2(u, v, h, uh, vh, eta, Time, G, GV, US, param
                                                                 !! the number of times the velocity is
                                                                 !! truncated (this should be 0).
   logical,                          intent(out)   :: calc_dtbt  !< If true, recalculate the barotropic time step
-  type(porous_barrier_ptrs), intent(in) :: pbv !sjd
+  type(porous_barrier_ptrs),        intent(in)    :: pbv        !< porous barrier fractional cell metrics
   integer,                optional, intent(out)   :: cont_stencil !< The stencil for thickness
                                                                 !! from the continuity solver.
 
