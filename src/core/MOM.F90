@@ -1022,6 +1022,11 @@ subroutine step_MOM_dynamics(forces, p_surf_begin, p_surf_end, dt, dt_thermo, &
     call diag_update_remap_grids(CS%diag)
   endif
 
+  !update porous barrier fractional cell metrics
+  call porous_widths(h, CS%tv, G, GV, US, eta_por, &
+       G%porous_width_uv, G%porous_width_i,G%porous_width_j, G%porous_width_Dmin, &
+       G%porous_width_Dmax, G%porous_width_Davg, CS%pbv)
+
   ! The bottom boundary layer properties need to be recalculated.
   if (bbl_time_int > 0.0) then
     call enable_averages(bbl_time_int, &
@@ -1029,16 +1034,11 @@ subroutine step_MOM_dynamics(forces, p_surf_begin, p_surf_end, dt, dt_thermo, &
     ! Calculate the BBL properties and store them inside visc (u,h).
     call cpu_clock_begin(id_clock_BBL_visc)
     call set_viscous_BBL(CS%u, CS%v, CS%h, CS%tv, CS%visc, G, GV, US, &
-                         CS%set_visc_CSp, symmetrize=.true.)
+                         CS%set_visc_CSp, CS%pbv, symmetrize=.true.)
     call cpu_clock_end(id_clock_BBL_visc)
     if (showCallTree) call callTree_wayPoint("done with set_viscous_BBL (step_MOM)")
     call disable_averaging(CS%diag)
   endif
-
-  !sjd porous interface, populate porous_width_wU/wV
-  call porous_widths(h, CS%tv, G, GV, US, eta_por, &
-       G%porous_width_uv, G%porous_width_i,G%porous_width_j, G%porous_width_Dmin, &
-       G%porous_width_Dmax, G%porous_width_Davg, CS%pbv)
 
   if (CS%do_dynamics .and. CS%split) then !--------------------------- start SPLIT
     ! This section uses a split time stepping scheme for the dynamic equations,
@@ -1288,7 +1288,11 @@ subroutine step_MOM_thermo(CS, G, GV, US, u, v, h, tv, fluxes, dtdia, &
     ! DIABATIC_FIRST=True. Otherwise diabatic() is called after the dynamics
     ! and set_viscous_BBL is called as a part of the dynamic stepping.
     call cpu_clock_begin(id_clock_BBL_visc)
-    call set_viscous_BBL(u, v, h, tv, CS%visc, G, GV, US, CS%set_visc_CSp, symmetrize=.true.)
+    !update porous barrier fractional cell metrics
+    call porous_widths(h, CS%tv, G, GV, US, eta_por, &
+         G%porous_width_uv, G%porous_width_i,G%porous_width_j, G%porous_width_Dmin, &
+         G%porous_width_Dmax, G%porous_width_Davg, CS%pbv)
+    call set_viscous_BBL(u, v, h, tv, CS%visc, G, GV, US, CS%set_visc_CSp, CS%pbv, symmetrize=.true.)
     call cpu_clock_end(id_clock_BBL_visc)
     if (showCallTree) call callTree_wayPoint("done with set_viscous_BBL (step_MOM_thermo)")
   endif
