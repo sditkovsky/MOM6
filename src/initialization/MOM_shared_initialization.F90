@@ -435,7 +435,7 @@ subroutine limit_topography(D, G, param_file, max_depth, US)
       if (D(i,j) > mask_depth) then
         D(i,j) = min( max( D(i,j), min_depth ), max_depth )
       else !added by Liao, otherwise it has error "NaN in input field of reproducing_EFP_sum(_2d)"
-        D(i,j) = 0. ! Liao
+        D(i,j) = mask_depth ! Liao
       endif
     enddo ; enddo
   endif
