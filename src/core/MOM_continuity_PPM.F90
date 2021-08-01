@@ -434,7 +434,7 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
       if (present(uhbt)) then
         call zonal_flux_adjust(u, h_in, h_L, h_R, uhbt(:,j), uh_tot_0, duhdu_tot_0, du, &
                                du_max_CFL, du_min_CFL, dt, G, GV, US, CS, visc_rem, &
-                               j, ish, ieh, do_I, por_face_areaU, .true., uh, OBC=OBC)
+                               j, ish, ieh, do_I, por_face_areaU, uh, OBC=OBC)
         if (present(u_cor)) then ; do k=1,nz
           do I=ish-1,ieh ; u_cor(I,j,k) = u(I,j,k) + du(I) * visc_rem(I,k) ; enddo
           if (local_specified_BC) then ; do I=ish-1,ieh
@@ -453,8 +453,6 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
         call set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0,&
                                du_max_CFL, du_min_CFL, dt, G, GV, US, CS, visc_rem, &
                                visc_rem_max, j, ish, ieh, do_I, por_face_areaU)
-                               du_max_CFL, du_min_CFL, dt, G, GV, US, CS, visc_rem, &
-                               visc_rem_max, j, ish, ieh, do_I)
         if (any_simple_OBC) then
           do I=ish-1,ieh
             l_seg = OBC%segnum_u(I,j)
@@ -513,10 +511,10 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, por_face_areaU, u
   if  (set_BT_cont) then ; if (allocated(BT_cont%h_u)) then
     if (present(u_cor)) then
       call zonal_face_thickness(u_cor, h_in, h_L, h_R, BT_cont%h_u, dt, G, GV, US, LB, &
-                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k) ,visc_rem_u, OBC)
+                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k), visc_rem_u, OBC)
     else
       call zonal_face_thickness(u, h_in, h_L, h_R, BT_cont%h_u, dt, G, GV, US, LB, &
-                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k) ,visc_rem_u, OBC)
+                                CS%vol_CFL, CS%marginal_faces,por_face_areaU(:,j,k), visc_rem_u, OBC)
     endif
   endif ; endif
 
@@ -628,7 +626,6 @@ subroutine zonal_face_thickness(u, h, h_L, h_R, h_u, dt, G, GV, US, LB, vol_CFL,
                           !! marginal face thicknesses; otherwise report transport-averaged thicknesses.
   real, dimension(SZIB_(G), SZJ_(G), SZK_(G)), &
                                    intent(in)    :: por_face_areaU !< fractional open area of U-faces [nondim]
-  real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)), &
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)), &
                                    optional, intent(in)    :: visc_rem_u
                           !< Both the fraction of the momentum originally in a layer that remains after
