@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-#OUTPUT_DIRECTORY       =
+OUTPUT_DIRECTORY       = .
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -236,19 +236,27 @@ TAB_SIZE               = 2
 
 # This allows doxygen passthrough of \eqref to html for mathjax
 # Single reference within a math block
-ALIASES += eqref{1}="\latexonly\ref{\1}\endlatexonly\htmlonly&nbsp;\eqref{\1}\endhtmlonly"
+ALIASES += eqref{1}="\latexonly\ref{\1}\endlatexonly\htmlonly&nbsp;\eqref{\1}\endhtmlonly\xmlonly \\eqref{\1}\endxmlonly"
 
 # Large math block with multiple references
 # TODO: We should be able to overload functions but recursion is happening? For now, the
 # second command creates a \eqref2 that is passed to sphinx for processing.  This breaks
 # the html generation for doxygen
+# Doxygen 1.8.13 requires extra help via xmlonly
+# See python sphinxcontrib-autodoc_doxygen module autodoc_doxygen/xmlutils.py
 # \eqref{eq:ale-thickness-equation,ale-equations,thickness}
-ALIASES += eqref{3}="\latexonly\ref{\1}\endlatexonly\htmlonly&nbsp;\eqref2{\2,\3}\endhtmlonly"
+ALIASES += eqref{3}="\latexonly\ref{\1}\endlatexonly\htmlonly&nbsp;\eqref2{\2,\3}\endhtmlonly\xmlonly \\eqref4{\1}\\eqref2{\2,\3}\endxmlonly"
 
 # Reference: https://stackoverflow.com/questions/25290453/how-do-i-add-a-footnote-in-doxygen
 # TODO: Use this simple js library to create actual footnotes in html
 # Reference: https://github.com/jheftmann/footnoted
-ALIASES += footnote{1}="\latexonly\footnote\{\1\}\endlatexonly\htmlonly<sup title=\"\1\"><b>[*]</b></sup>\endhtmlonly"
+ALIASES += footnote{1}="\latexonly\footnote\{\1\}\endlatexonly\htmlonly<sup title=\"\1\"><b>[*]</b></sup>\endhtmlonly\xmlonly<sup title=\"\1\"><b>[*]</b></sup>\endxmlonly"
+
+# \image latex does the wrong things to support equations in captions, this recreates
+# what it does and just passes through the string uninterpreted.
+# The image also needs to be added to LATEX_EXTRA_FILES.
+# Default 3rd argument: \includegraphics[width=\textwidth\,height=\textheight/2\,keepaspectratio=true]
+ALIASES += imagelatex{3}="\latexonly\begin{DoxyImage}\3{\1}\doxyfigcaption{\2}\end{DoxyImage}\endlatexonly\xmlonly<image type=\"latex\" name=\"\1\">\2</image>\endxmlonly"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
@@ -802,26 +810,38 @@ WARN_LOGFILE           = _build/doxygen_rtd_dox_debug.txt
 # Note: If this tag is empty the current directory is searched.
 
 INPUT                  = ../src \
-                         ../config_src/solo_driver \
-                         ../config_src/dynamic_symmetric \
+                         ../config_src/drivers/solo_driver \
+                         ../config_src/memory/dynamic_symmetric \
                          ../config_src/external \
-                         ../config_src/coupled_driver \
-                         ../src/core/MOM.F90 \
+                         ../config_src/drivers/FMS_cap \
                          ../src/ALE/MOM_ALE.F90 \
+                         ../src/ALE/PCM_functions.F90 \
+                         ../src/core/MOM.F90 \
+                         ../src/core/MOM_density_integrals.F90 \
+                         ../src/diagnostics/MOM_wave_structure.F90 \
                          ../src/equation_of_state/MOM_EOS.F90 \
+                         ../src/framework/MOM_diag_mediator.F90 \
+                         ../src/framework/MOM_domains.F90 \
+                         ../src/framework/MOM_dyn_horgrid.F90 \
+                         ../src/framework/MOM_file_parser.F90 \
                          ../src/framework/MOM_unit_scaling.F90 \
                          ../src/ice_shelf/MOM_ice_shelf.F90 \
-                         ../src/parameterizations/lateral/MOM_MEKE.F90
+                         ../src/parameterizations/lateral/MOM_MEKE.F90 \
+                         ../src/parameterizations/vertical/MOM_bkgnd_mixing.F90 \
+                         ../src/parameterizations/vertical/MOM_energetic_PBL.F90 \
+                         ../src/parameterizations/vertical/MOM_set_viscosity.F90 \
+                         ../src/tracer/oil_tracer.F90 \
+                         ../src/user/user_initialization.F90
 
 # Basic testing units below
 
 #INPUT                  = ../src/equation_of_state
 
 #INPUT                  = ../src/ALE \
-#                         ../config_src/solo_driver \
-#                         ../config_src/dynamic_symmetric \
+#                         ../config_src/drivers/solo_driver \
+#                         ../config_src/memory/dynamic_symmetric \
 #                         ../config_src/external \
-#                         ../config_src/coupled_driver
+#                         ../config_src/drivers/FMS_cap
 
 #INPUT                  = \
 #        ../src/ALE/_ALE.dox \
@@ -908,7 +928,9 @@ EXCLUDE_SYMLINKS       = NO
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = makedep.py Makefile INSTALL
+EXCLUDE_PATTERNS       = makedep.py \
+                         Makefile \
+                         INSTALL
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -945,7 +967,8 @@ EXAMPLE_RECURSIVE      = NO
 # that contain images that are to be included in the documentation (see the
 # \image command).
 
-IMAGE_PATH             = images ../src
+IMAGE_PATH             = images \
+                         ../src
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should
 # invoke to filter for each input file. Doxygen will invoke the filter program
@@ -1709,7 +1732,7 @@ COMPACT_LATEX          = NO
 # The default value is: a4.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-PAPER_TYPE             = a4
+PAPER_TYPE             = letter
 
 # The EXTRA_PACKAGES tag can be used to specify one or more LaTeX package names
 # that should be included in the LaTeX output. The package can be specified just
@@ -1767,7 +1790,15 @@ LATEX_EXTRA_STYLESHEET =
 # markers available.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-LATEX_EXTRA_FILES      =
+# Graphics that have math or equations in the caption need to be listed below.
+LATEX_EXTRA_FILES      = \
+       images/cell_3d.png \
+       images/Grid_metrics.png \
+       images/h_PPM.png \
+       images/Newton_PPM.png \
+       images/PG_loop.png \
+       images/shao3.png \
+       images/shao4.png
 
 # If the PDF_HYPERLINKS tag is set to YES, the LaTeX that is generated is
 # prepared for conversion to PDF (using ps2pdf or pdflatex). The PDF file will
@@ -2081,7 +2112,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           = ../src/framework ../config_src/dynamic_symmetric
+INCLUDE_PATH           = ../src/framework ../config_src/memory/dynamic_symmetric
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
