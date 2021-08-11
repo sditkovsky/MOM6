@@ -3571,9 +3571,6 @@ subroutine MOM_end(CS)
 
   if (CS%use_ALE_algorithm) call ALE_end(CS%ALE_CSp)
 
-  DEALLOC_(CS%u) ; DEALLOC_(CS%v) ; DEALLOC_(CS%h)
-  DEALLOC_(CS%uh) ; DEALLOC_(CS%vh)
-
   !sjd deallocate porous barrier variables
   DEALLOC_(CS%por_face_areaU) ; DEALLOC_(CS%por_face_areaV)
   DEALLOC_(CS%por_layer_widthU) ; DEALLOC_(CS%por_layer_widthV)
