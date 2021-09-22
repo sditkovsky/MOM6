@@ -165,6 +165,7 @@ type, public :: MOM_dyn_split_RK2_CS ; private
   integer :: id_umo_2d = -1, id_vmo_2d = -1
   integer :: id_PFu    = -1, id_PFv    = -1
   integer :: id_CAu    = -1, id_CAv    = -1
+  integer :: id_ueffA = -1, id_veffA = -1
   ! integer :: id_hf_PFu    = -1, id_hf_PFv    = -1
   integer :: id_h_PFu    = -1, id_h_PFv    = -1
   integer :: id_hf_PFu_2d = -1, id_hf_PFv_2d = -1
@@ -299,7 +300,8 @@ subroutine step_MOM_dyn_split_RK2(u, v, h, tv, visc, Time_local, dt, forces, p_s
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)) :: up  ! Predicted zonal velocity [L T-1 ~> m s-1].
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)) :: vp  ! Predicted meridional velocity [L T-1 ~> m s-1].
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)) :: hp   ! Predicted thickness [H ~> m or kg m-2].
-
+  real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)) :: ueffA   ! Effective Area of U-Faces [H L ~> m2]
+  real, dimension(SZI_(G),SZJB_(G),SZK_(GV)) :: veffA   ! Effective Area of V-Faces [H L ~> m2]
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)) :: u_bc_accel
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)) :: v_bc_accel
     ! u_bc_accel and v_bc_accel are the summed baroclinic accelerations of each
@@ -387,6 +389,7 @@ subroutine step_MOM_dyn_split_RK2(u, v, h, tv, visc, Time_local, dt, forces, p_s
     do j=G%jsdB,G%jedB ; do i=G%isd,G%ied   ;  vp(i,j,k) = 0.0 ; enddo ; enddo
     do j=G%jsd,G%jed   ; do i=G%isd,G%ied   ;  hp(i,j,k) = h(i,j,k) ; enddo ; enddo
   enddo
+  ueffA(:,:,:) = 0; veffA(:,:,:) = 0
 
   ! Update CFL truncation value as function of time
   call updateCFLtruncationValue(Time_local, CS%vertvisc_CSp)
@@ -903,6 +906,18 @@ subroutine step_MOM_dyn_split_RK2(u, v, h, tv, visc, Time_local, dt, forces, p_s
   if (CS%id_vav        > 0) call post_data(CS%id_vav, v_av,                 CS%diag)
   if (CS%id_u_BT_accel > 0) call post_data(CS%id_u_BT_accel, CS%u_accel_bt, CS%diag)
   if (CS%id_v_BT_accel > 0) call post_data(CS%id_v_BT_accel, CS%v_accel_bt, CS%diag)
+
+! Calculate effective areas and post data
+  if (CS%id_ueffA > 0) then
+     ueffA = uh / u_av
+     call post_data(CS%id_ueffA, ueffA, CS%diag)
+  endif
+
+  if (CS%id_veffA > 0) then
+     veffA = vh / v_av
+     call post_data(CS%id_veffA, veffA, CS%diag)
+  endif
+
 
   ! Diagnostics for terms multiplied by fractional thicknesses
 
@@ -1483,6 +1498,13 @@ subroutine initialize_dyn_split_RK2(u, v, h, uh, vh, eta, Time, G, GV, US, param
       'Zonal Pressure Force Acceleration', 'm s-2', conversion=US%L_T2_to_m_s2)
   CS%id_PFv = register_diag_field('ocean_model', 'PFv', diag%axesCvL, Time, &
       'Meridional Pressure Force Acceleration', 'm s-2', conversion=US%L_T2_to_m_s2)
+  CS%id_ueffA = register_diag_field('ocean_model', 'ueffA', diag%axesCuL, Time, &
+       'Effective U-Face Area', 'm^2', conversion = GV%H_to_MKS*US%L_to_m, &
+       y_cell_method='sum', v_extensive = .true.)
+  CS%id_veffA = register_diag_field('ocean_model', 'veffA', diag%axesCvL, Time, &
+       'Effective V-Face Area', 'm^2', conversion = GV%H_to_MKS*US%L_to_m, &
+       x_cell_method='sum', v_extensive = .true.)
+
 
   !CS%id_hf_PFu = register_diag_field('ocean_model', 'hf_PFu', diag%axesCuL, Time, &
   !    'Fractional Thickness-weighted Zonal Pressure Force Acceleration', &

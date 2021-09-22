@@ -130,6 +130,7 @@ type, public :: MOM_dyn_unsplit_RK2_CS ; private
 
   !>@{ Diagnostic IDs
   integer :: id_uh = -1, id_vh = -1
+  integer :: id_ueffA = -1, id_veffA = -1
   integer :: id_PFu = -1, id_PFv = -1, id_CAu = -1, id_CAv = -1
   !>@}
 
@@ -239,6 +240,8 @@ subroutine step_MOM_dyn_unsplit_RK2(u_in, v_in, h_in, tv, visc, Time_local, dt, 
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)) :: h_av, hp
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)) :: up ! Predicted zonal velocities [L T-1 ~> m s-1]
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)) :: vp ! Predicted meridional velocities [L T-1 ~> m s-1]
+  real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)) :: ueffA   ! Effective Area of U-Faces [H L ~> m2]
+  real, dimension(SZI_(G),SZJB_(G),SZK_(GV)) :: veffA   ! Effective Area of V-Faces [H L ~> m2]
   real, dimension(:,:), pointer :: p_surf => NULL()
   real :: dt_pred   ! The time step for the predictor part of the baroclinic time stepping [T ~> s]
   real :: dt_visc   ! The time step for a part of the update due to viscosity [T ~> s]
@@ -251,6 +254,7 @@ subroutine step_MOM_dyn_unsplit_RK2(u_in, v_in, h_in, tv, visc, Time_local, dt, 
   h_av(:,:,:) = 0; hp(:,:,:) = 0
   up(:,:,:) = 0
   vp(:,:,:) = 0
+  ueffA(:,:,:) = 0; veffA(:,:,:) = 0
 
   dyn_p_surf = associated(p_surf_begin) .and. associated(p_surf_end)
   if (dyn_p_surf) then
@@ -449,6 +453,18 @@ subroutine step_MOM_dyn_unsplit_RK2(u_in, v_in, h_in, tv, visc, Time_local, dt, 
   if (CS%id_uh > 0) call post_data(CS%id_uh, uh, CS%diag)
   if (CS%id_vh > 0) call post_data(CS%id_vh, vh, CS%diag)
 
+! Calculate effective areas and post data
+  if (CS%id_ueffA > 0) then
+     ueffA = uh / up
+     call post_data(CS%id_ueffA, ueffA, CS%diag)
+  endif
+
+  if (CS%id_veffA > 0) then
+     veffA = vh / vp
+     call post_data(CS%id_veffA, veffA, CS%diag)
+  endif
+
+
 end subroutine step_MOM_dyn_unsplit_RK2
 
 ! =============================================================================
@@ -646,6 +662,12 @@ subroutine initialize_dyn_unsplit_RK2(u, v, h, Time, G, GV, US, param_file, diag
       'Zonal Pressure Force Acceleration', 'meter second-2', conversion=US%L_T2_to_m_s2)
   CS%id_PFv = register_diag_field('ocean_model', 'PFv', diag%axesCvL, Time, &
       'Meridional Pressure Force Acceleration', 'meter second-2', conversion=US%L_T2_to_m_s2)
+  CS%id_ueffA = register_diag_field('ocean_model', 'ueffA', diag%axesCuL, Time, &
+       'Effective U-Face Area', 'm^2', conversion = GV%H_to_MKS*US%L_to_m, &
+       y_cell_method='sum', v_extensive = .true.)
+  CS%id_veffA = register_diag_field('ocean_model', 'veffA', diag%axesCvL, Time, &
+       'Effective V-Face Area', 'm^2', conversion = GV%H_to_MKS*US%L_to_m, &
+       x_cell_method='sum', v_extensive = .true.)
 
   id_clock_Cor = cpu_clock_id('(Ocean Coriolis & mom advection)', grain=CLOCK_MODULE)
   id_clock_continuity = cpu_clock_id('(Ocean continuity equation)', grain=CLOCK_MODULE)
