@@ -68,7 +68,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
   real w_layer, & !< frac. open interface width of current layer [nondim]
        A_layer, & !< integral of fractional open width for current layer [nondim]
        A_layer_cum, & !< cumulative integral of fractional open width  [nondim]
-       eta_s !< shallower of upwind/downwind layer [Z ~> m]
+       eta_s !< layer height used for fit [Z ~> m]
   
   !eta is zero at surface and decreases downward
 
@@ -84,7 +84,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
         I = por_i(ii) !in [IsdB, IedB]
         j = por_j(ii) !in [jsd, jed]
         do K = nk+1,1,-1
-           eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
+           !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
+           eta_s = (eta(I,j,K) + eta(I+1,j,K)) / 2.0 !take arithmetic mean
            if (eta_s <= Dmin(ii)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
               A_layer_cum = 0.0
@@ -102,7 +103,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
         i = por_i(ii) !in [isd, ied]
         J = por_j(ii) !in [JsdB, JedB] 
         do K = nk+1,1,-1
-           eta_s = max(eta(i,J,K), eta(i,J+1,K)) !take shallower layer height
+           !eta_s = max(eta(i,J,K), eta(i,J+1,K)) !take shallower layer height
+           eta_s = (eta(i,J,K) + eta(i,J+1,K)) / 2.0
            if (eta_s <= Dmin(ii)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_cum = 0.0
