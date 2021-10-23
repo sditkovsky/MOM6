@@ -25,8 +25,7 @@ end interface porous_widths
 contains
 
 
-subroutine por_widths(h, tv, G, GV, US, eta, &
-    uv, por_i, por_j, Dmin, Dmax, Davg, pbv, eta_bt, halo_size, eta_to_m)
+subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
     !eta_bt, halo_size, eta_to_m not currently used
     
   !variables needed to call find_eta
@@ -47,20 +46,6 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
 
   real,                             optional, intent(in)  :: eta_to_m  !< The conversion factor from
              !! the units of eta to m; by default this is US%Z_to_m.
-
-
-  !variables used to modify porous interface
-  !Currently using len 100, but need a more robust solution
-  integer, dimension(100),              intent(in)  :: uv    !< indicator of whether stored 
-                                                             !! coordinates belong to U or V grid
-  integer, dimension(100),              intent(in)  :: por_i !< zonal coordinate of modified cell
-  integer, dimension(100),              intent(in)  :: por_j !< meridional coordinate of modified cell
-  real, dimension(100),                 intent(in)  :: Dmin  !< parameterized topography mimimum depth
-                                                             !![Z ~> m]
-  real, dimension(100),                 intent(in)  :: Dmax  !< parameterized topography maximum depth
-                                                             !! [Z ~> m]
-  real, dimension(100),                 intent(in)  :: Davg  !< parameterized topography average depth
-                                                             !! [Z ~> m]
   type(porous_barrier_ptrs),           intent(inout) :: pbv  !< porous barrier fractional cell metrics
 
   !local variables
@@ -70,56 +55,57 @@ subroutine por_widths(h, tv, G, GV, US, eta, &
        A_layer_cum, & !< cumulative integral of fractional open width  [nondim]
        eta_s !< layer height used for fit [Z ~> m]
   
-  !eta is zero at surface and decreases downward
+  isd = G%isd; ied = G%ied; jsd = G%jsd; jed = G%jed
+  IsdB = G%IsdB; IedB = G%IedB; JsdB = G%JsdB; JedB = G%JedB
 
+  !eta is zero at surface and decreases downward
 
   nk = SZK_(G)
 
   !currently no treatment for using optional find_eta arguments if present
   call find_eta(h, tv, G, GV, US, eta)
 
-
-  do ii = 1, size(uv)
-     if (uv(ii) == 1) then !zonal face
-        I = por_i(ii) !in [IsdB, IedB]
-        j = por_j(ii) !in [jsd, jed]
+  do I=IsdB,IedB; do j=jsd,jed 
+     if (G%porous_DavgU(I,j) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
            eta_s = (eta(I,j,K) + eta(I+1,j,K)) / 2.0 !take arithmetic mean
-           if (eta_s <= Dmin(ii)) then
+           if (eta_s <= G%porous_DminU(I,j)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
               A_layer_cum = 0.0
               if (K < nk+1) then
                  pbv%por_face_areaU(I,j,k) = 0.0; endif
            else
-              call calc_por_layer(Dmin(ii), Dmax(ii), Davg(ii), eta_s, w_layer, A_layer)
+              call calc_por_layer(G%porous_DminU(I,j), G%porous_DmaxU(I,j), G%porous_DavgU(I,j),&
+                   eta_s, w_layer, A_layer)
               pbv%por_layer_widthU(I,j,K) = w_layer
               if (k <= nk) then
                  pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_cum)/(eta(I,j,K)-eta(I,j,K+1))
               endif
                A_layer_cum = A_layer
            endif; enddo
-     elseif (uv(ii) == 2) then !meridional face
-        i = por_i(ii) !in [isd, ied]
-        J = por_j(ii) !in [JsdB, JedB] 
+       endif; enddo; enddo
+
+  do i=isd,ied; do J=JsdB,JedB 
+     if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
-           !eta_s = max(eta(i,J,K), eta(i,J+1,K)) !take shallower layer height
-           eta_s = (eta(i,J,K) + eta(i,J+1,K)) / 2.0
-           if (eta_s <= Dmin(ii)) then
+           !eta_s = max(eta(i,J,K), eta(i+1,J,K)) !take shallower layer height
+           eta_s = (eta(i,J,K) + eta(i+1,J,K)) / 2.0 !take arithmetic mean
+           if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_cum = 0.0
               if (K < nk+1) then
                  pbv%por_face_areaV(i,J,k) = 0.0; endif
            else
-              call calc_por_layer(Dmin(ii), Dmax(ii), Davg(ii), eta_s, w_layer, A_layer)
+              call calc_por_layer(G%porous_DminV(i,J), G%porous_DmaxV(i,J), G%porous_DavgV(i,J),&
+                   eta_s, w_layer, A_layer)
               pbv%por_layer_widthV(i,J,K) = w_layer
               if (k <= nk) then
                  pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_cum)/(eta(i,J,K)-eta(i,J,K+1))
               endif
                A_layer_cum = A_layer
-           endif; enddo     
-     endif
-  enddo
+           endif; enddo
+       endif; enddo; enddo
 
 end subroutine por_widths
 

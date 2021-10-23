@@ -848,7 +848,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
   integer :: ios, iounit, isu, isv
   integer :: last, num_lines, nl_read, ln, npt, u_pt, v_pt
   integer :: i, j, isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB
-  integer :: count, isu_por, isv_por
+  integer :: isu_por, isv_por
   logical :: found_u_por, found_v_por
 
   isd = G%isd ; ied = G%ied ; jsd = G%jsd ; jed = G%jed
@@ -1026,7 +1026,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
 
   endif
 
-  count = 1
+
   do j=jsd,jed ; do I=IsdB,IedB
     lat = G%geoLatCu(I,j) ; lon = G%geoLonCu(I,j)
     if (check_360) then ; lon_p = lon+len_lon ; lon_m = lon-len_lon
@@ -1039,33 +1039,24 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_m >= u_lon(1,npt)) .and. (lon_m <= u_lon(2,npt)))) ) then
 
         G%dy_Cu(I,j) = G%mask2dCu(I,j) * m_to_L*min(L_to_m*G%dyCu(I,j), max(u_width(npt), 0.0))
-
+        
+        G%porous_DminU(I,j) = Dmin_u(npt)
+        G%porous_DmaxU(I,j) = Dmax_u(npt)
+        G%porous_DavgU(I,j) = Davg_u(npt)
+        
         if (j>=G%jsc .and. j<=G%jec .and. I>=G%isc .and. I<=G%iec) then ! Limit messages/checking to compute domain
 
           if ( G%mask2dCu(I,j) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCu=0 at ",lat,lon," (",&
                 u_lat(1,npt), u_lat(2,npt), u_lon(1,npt), u_lon(2,npt),") so grid metric is unmodified."
           else
-
-            G%porous_width_uv(count) = 1 !signifies u point 
-            G%porous_width_j(count) = j
-            G%porous_width_i(count) = I
-            G%porous_width_Dmin(count) = Dmin_u(npt)
-            G%porous_width_Dmax(count) = Dmax_u(npt)
-            G%porous_width_Davg(count) = Davg_u(npt)
-            if (Davg_u(npt) == 0.) G%porous_width_uv(count) = 0
-
             u_line_used(npt) = u_line_used(npt) + 1
             write(stdout,'(A,2F8.2,A,4F8.2,A5,F9.2,A1)') &
                   "read_face_lengths_list : Modifying dy_Cu gridpoint at ",lat,lon," (",&
                   u_lat(1,npt), u_lat(2,npt), u_lon(1,npt), u_lon(2,npt),") to ",L_to_m*G%dy_Cu(I,j),"m"
-
-            write(*,'(A,I4,A,I4,A, I4, A,I4,A,F8.2,A,F8.2,A,F8.2,A)') &
-                  "read_face_lengths_list : Porous Barrier parameters. porous_width_uv:",G%porous_width_uv(count),",count = ",count,",  porous_width_j:",&
-                  G%porous_width_j(count),", porous_width_i:",G%porous_width_i(count),", porous_width_Dmin", G%porous_width_Dmin(count),&
-                  "porous_width_Dmax:",G%porous_width_Dmax(count),", porous_width_Davg:", G%porous_width_Davg(count), "m"
-
-            count = count + 1
+            write(stdout,'(A,3F8.2,A)') &
+                  "read_face_lengths_list : Porous Topography parameters: Dmin, Dmax, Davg (",G%porous_DminU(I,j),&
+                  G%porous_DmaxU(I,j), G%porous_DavgU(I,j),")m"
           endif
         endif
       endif
@@ -1086,30 +1077,25 @@ subroutine reset_face_lengths_list(G, param_file, US)
           (((lon >= v_lon(1,npt)) .and. (lon <= v_lon(2,npt))) .or. &
            ((lon_p >= v_lon(1,npt)) .and. (lon_p <= v_lon(2,npt))) .or. &
            ((lon_m >= v_lon(1,npt)) .and. (lon_m <= v_lon(2,npt)))) ) then
+
         G%dx_Cv(i,J) = G%mask2dCv(i,J) * m_to_L*min(L_to_m*G%dxCv(i,J), max(v_width(npt), 0.0))
+
+        G%porous_DminV(i,J) = Dmin_v(npt)
+        G%porous_DmaxV(i,J) = Dmax_v(npt)
+        G%porous_DavgV(i,J) = Davg_v(npt)
+
         if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain 
           if ( G%mask2dCv(i,J) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCv=0 at ",lat,lon," (",&
                   v_lat(1,npt), v_lat(2,npt), v_lon(1,npt), v_lon(2,npt),") so grid metric is unmodified."
           else
-            G%porous_width_uv(count) = 2 !signifies v point
-            G%porous_width_j(count) = J
-            G%porous_width_i(count) = i
-            G%porous_width_Dmin(count) = Dmin_v(npt)
-            G%porous_width_Dmax(count) = Dmax_v(npt)
-            G%porous_width_Davg(count) = Davg_v(npt)
-            if (Davg_v(npt) == 0.) G%porous_width_uv(count) = 0
-
             v_line_used(npt) = v_line_used(npt) + 1
             write(stdout,'(A,2F8.2,A,4F8.2,A5,F9.2,A1)') &
                   "read_face_lengths_list : Modifying dx_Cv gridpoint at ",lat,lon," (",&
                   v_lat(1,npt), v_lat(2,npt), v_lon(1,npt), v_lon(2,npt),") to ",L_to_m*G%dx_Cv(I,j),"m"
-            write(*,'(A,I4,A,I4,A,I4,A,I4,A,F8.2,A,F8.2,A,F8.2,A)') &
-                  "read_face_lengths_list : Porous Barrier parameters. porous_width_uv:",G%porous_width_uv(count),",count = ",count,",  porous_width_j:",&
-                  G%porous_width_j(count),", porous_width_i:",G%porous_width_i(count),", porous_width_Dmin", G%porous_width_Dmin(count),&
-                  "porous_width_Dmax:",G%porous_width_Dmax(count),", porous_width_Davg:", G%porous_width_Davg(count), "m"
-
-            count = count + 1
+            write(stdout,'(A,3F8.2,A)') &
+                  "read_face_lengths_list : Porous Topography parameters: Dmin, Dmax, Davg (",G%porous_DminV(i,J),&
+                  G%porous_DmaxV(i,J), G%porous_DavgV(i,J),")m"
           endif
         endif
       endif

@@ -112,6 +112,16 @@ type, public :: ocean_grid_type
     IareaCv, &   !< The masked inverse areas of v-grid cells [L-2 ~> m-2].
     areaCv       !< The areas of the v-grid cells [L2 ~> m2].
 
+  real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_) :: &
+    porous_DminU, & !< minimum topographic height of U-face [m]
+    porous_DmaxU, & !< maximum topographic height of U-face [m]
+    porous_DavgU    !< average topographic height of U-face [m]
+
+  real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_) :: &
+    porous_DminV, & !< minimum topographic height of V-face [m]
+    porous_DmaxV, & !< maximum topographic height of V-face [m]
+    porous_DavgV    !< average topographic height of V-face [m]
+
   real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEMB_PTR_) :: &
     mask2dBu, &  !< 0 for boundary points and 1 for ocean points on the q grid [nondim].
     geoLatBu, &  !< The geographic latitude at q points in degrees of latitude or m.
@@ -175,18 +185,6 @@ type, public :: ocean_grid_type
   real :: len_lon = 0.  !< The longitudinal (or x-coord) extent of physical domain
   real :: Rad_Earth = 6.378e6 !< The radius of the planet [m].
   real :: max_depth     !< The maximum depth of the ocean in depth units [Z ~> m].
-
-  !sjd arrays to hold porous curvefit parameters
-  integer, allocatable, dimension(:) :: &
-    porous_width_uv     !< whether modified width is u_width (1) or v_width (2) or Null (0)
-  integer, allocatable, dimension(:) :: &
-    porous_width_j, & !< meridional coordinate of modified cell
-    porous_width_i    !< zonal coordinate of modified cell
-  real, allocatable, dimension(:) :: &
-    porous_width_Dmin, & !< spatial minimum of curve fit
-    porous_width_Dmax, & !< spatial maximum of curve fit
-    porous_width_Davg    !< spatial average of cuve fit
-
 
 end type ocean_grid_type
 
@@ -586,6 +584,14 @@ subroutine allocate_metrics(G)
   ALLOC_(G%dx_Cv(isd:ied,JsdB:JedB))     ; G%dx_Cv(:,:) = 0.0
   ALLOC_(G%dy_Cu(IsdB:IedB,jsd:jed))     ; G%dy_Cu(:,:) = 0.0
 
+  ALLOC_(G%porous_DminU(IsdB:IedB,jsd:jed)); G%porous_DminU(:,:) = 0.0
+  ALLOC_(G%porous_DmaxU(IsdB:IedB,jsd:jed)); G%porous_DmaxU(:,:) = 0.0
+  ALLOC_(G%porous_DavgU(IsdB:IedB,jsd:jed)); G%porous_DavgU(:,:) = 0.0
+
+  ALLOC_(G%porous_DminV(isd:ied,JsdB:JedB)); G%porous_DminV(:,:) = 0.0
+  ALLOC_(G%porous_DmaxV(isd:ied,JsdB:JedB)); G%porous_DmaxV(:,:) = 0.0
+  ALLOC_(G%porous_DavgV(isd:ied,JsdB:JedB)); G%porous_DavgV(:,:) = 0.0
+
   ALLOC_(G%areaCu(IsdB:IedB,jsd:jed))  ; G%areaCu(:,:) = 0.0
   ALLOC_(G%areaCv(isd:ied,JsdB:JedB))  ; G%areaCv(:,:) = 0.0
   ALLOC_(G%IareaCu(IsdB:IedB,jsd:jed)) ; G%IareaCu(:,:) = 0.0
@@ -603,16 +609,6 @@ subroutine allocate_metrics(G)
   allocate(G%gridLonB(G%IsgB:G%IegB)) ; G%gridLonB(:) = 0.0
   allocate(G%gridLatT(jsg:jeg))   ; G%gridLatT(:) = 0.0
   allocate(G%gridLatB(G%JsgB:G%JegB)) ; G%gridLatB(:) = 0.0
-
-
-  !sjd for now, let's allocate for 100 channels
-  allocate(G%porous_width_uv(100))  ; G%porous_width_uv(:) = 0
-  allocate(G%porous_width_j(100))   ; G%porous_width_j(:) = 0
-  allocate(G%porous_width_i(100))   ; G%porous_width_i(:) = 0
-  allocate(G%porous_width_Dmin(100)); G%porous_width_Dmin(:) = 0.0
-  allocate(G%porous_width_Dmax(100)); G%porous_width_Dmax(:) = 0.0
-  allocate(G%porous_width_Davg(100)); G%porous_width_Davg(:) = 0.0
-
 
 end subroutine allocate_metrics
 
@@ -648,17 +644,12 @@ subroutine MOM_grid_end(G)
 
   DEALLOC_(G%dx_Cv) ; DEALLOC_(G%dy_Cu)
 
-  !sjd deallocate
-  deallocate(G%porous_width_uv)
-  deallocate(G%porous_width_j)
-  deallocate(G%porous_width_i)
-  deallocate(G%porous_width_Dmin)
-  deallocate(G%porous_width_Dmax)
-  deallocate(G%porous_width_Davg)
-
   DEALLOC_(G%bathyT)  ; DEALLOC_(G%CoriolisBu)
   DEALLOC_(G%dF_dx)  ; DEALLOC_(G%dF_dy)
   DEALLOC_(G%sin_rot) ; DEALLOC_(G%cos_rot)
+
+  DEALLOC_(G%porous_DminU) ; DEALLOC_(G%porous_DmaxU) ; DEALLOC_(G%porous_DavgU)
+  DEALLOC_(G%porous_DminV) ; DEALLOC_(G%porous_DmaxV) ; DEALLOC_(G%porous_DavgV)
 
   deallocate(G%gridLonT) ; deallocate(G%gridLatT)
   deallocate(G%gridLonB) ; deallocate(G%gridLatB)

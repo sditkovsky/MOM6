@@ -1051,9 +1051,7 @@ subroutine step_MOM_dynamics(forces, p_surf_begin, p_surf_end, dt, dt_thermo, &
   endif
 
   !update porous barrier fractional cell metrics
-  call porous_widths(h, CS%tv, G, GV, US, eta_por, &
-       G%porous_width_uv, G%porous_width_i,G%porous_width_j, G%porous_width_Dmin, &
-       G%porous_width_Dmax, G%porous_width_Davg, CS%pbv)
+  call porous_widths(h, CS%tv, G, GV, US, eta_por, CS%pbv)
 
   ! The bottom boundary layer properties need to be recalculated.
   if (bbl_time_int > 0.0) then
@@ -1318,9 +1316,7 @@ subroutine step_MOM_thermo(CS, G, GV, US, u, v, h, tv, fluxes, dtdia, &
     ! and set_viscous_BBL is called as a part of the dynamic stepping.
     call cpu_clock_begin(id_clock_BBL_visc)
     !update porous barrier fractional cell metrics
-    call porous_widths(h, CS%tv, G, GV, US, eta_por, &
-         G%porous_width_uv, G%porous_width_i,G%porous_width_j, G%porous_width_Dmin, &
-         G%porous_width_Dmax, G%porous_width_Davg, CS%pbv)
+    call porous_widths(h, CS%tv, G, GV, US, eta_por, CS%pbv)
     call set_viscous_BBL(u, v, h, tv, CS%visc, G, GV, US, CS%set_visc_CSp, CS%pbv, symmetrize=.true.)
     call cpu_clock_end(id_clock_BBL_visc)
     if (showCallTree) call callTree_wayPoint("done with set_viscous_BBL (step_MOM_thermo)")
