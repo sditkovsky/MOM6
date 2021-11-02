@@ -50,19 +50,21 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
 
   !local variables
   integer ii, i, j, k, nk, isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB
-  real w_layer, & !< frac. open interface width of current layer [nondim]
-       A_layer, & !< integral of fractional open width for current layer [nondim]
-       A_layer_cum, & !< cumulative integral of fractional open width  [nondim]
+  real w_layer, & !< fractional open width of layer interface [nondim]
+       A_layer, & !< integral of fractional open width from bottom to current layer[nondim]
+       A_layer_prev, & !< integral of fractional open width from bottom to previous layer [nondim]
        eta_s !< layer height used for fit [Z ~> m]
   
   isd = G%isd; ied = G%ied; jsd = G%jsd; jed = G%jed
   IsdB = G%IsdB; IedB = G%IedB; JsdB = G%JsdB; JedB = G%JedB
 
   !eta is zero at surface and decreases downward
+  !all calculations are done in [m]
 
   nk = SZK_(G)
 
   !currently no treatment for using optional find_eta arguments if present
+  !do I need to rescale eta here?
   call find_eta(h, tv, G, GV, US, eta)
 
   do I=IsdB,IedB; do j=jsd,jed 
@@ -72,7 +74,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
            eta_s = (eta(I,j,K) + eta(I+1,j,K)) / 2.0 !take arithmetic mean
            if (eta_s <= G%porous_DminU(I,j)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
-              A_layer_cum = 0.0
+              A_layer_prev = 0.0
               if (K < nk+1) then
                  pbv%por_face_areaU(I,j,k) = 0.0; endif
            else
@@ -80,9 +82,9 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthU(I,j,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_cum)/(eta(I,j,K)-eta(I,j,K+1))
+                 pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/(eta(I,j,K)-eta(I,j,K+1))
               endif
-               A_layer_cum = A_layer
+               A_layer_prev = A_layer
            endif; enddo
        endif; enddo; enddo
 
@@ -93,7 +95,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
            eta_s = (eta(i,J,K) + eta(i+1,J,K)) / 2.0 !take arithmetic mean
            if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
-              A_layer_cum = 0.0
+              A_layer_prev = 0.0
               if (K < nk+1) then
                  pbv%por_face_areaV(i,J,k) = 0.0; endif
            else
@@ -101,21 +103,21 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthV(i,J,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_cum)/(eta(i,J,K)-eta(i,J,K+1))
+                 pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/(eta(i,J,K)-eta(i,J,K+1))
               endif
-               A_layer_cum = A_layer
+               A_layer_prev = A_layer
            endif; enddo
        endif; enddo; enddo
 
 end subroutine por_widths
 
-subroutine calc_por_layer(D_min, D_max, D_avg, h_layer, w_layer, A_layer)
+subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
 !subroutine to calculate the profile fit for a layer
  
-  real,            intent(in) :: D_min !< minimum topographic height [Z ~> m]
-  real,            intent(in) :: D_max !< maximum topographic height [Z ~> m]
-  real,            intent(in) :: D_avg !< mean topographic height [Z ~> m]
-  real,            intent(in) :: h_layer !< height of interface [Z ~> m] 
+  real,            intent(in) :: D_min !< minimum topographic height [m]
+  real,            intent(in) :: D_max !< maximum topographic height [m]
+  real,            intent(in) :: D_avg !< mean topographic height [m]
+  real,            intent(in) :: eta_layer !< height of interface [m] 
   real,            intent(out) :: w_layer !< frac. open interface width of current layer [nondim]
   real,            intent(out) :: A_layer !< frac. open face area of current layer [nondim]
   !local variables
@@ -126,14 +128,14 @@ subroutine calc_por_layer(D_min, D_max, D_avg, h_layer, w_layer, A_layer)
   m = (D_avg - D_min)/(D_max - D_min)
   a = (1. - m)/m
 
-  zeta = (h_layer - D_min)/(D_max - D_min)
+  zeta = (eta_layer - D_min)/(D_max - D_min)
   
-  if (h_layer <= D_min) then
+  if (eta_layer <= D_min) then
      w_layer = 0.0
      A_layer = 0.0
-  elseif (h_layer >= D_max) then
+  elseif (eta_layer >= D_max) then
      w_layer = 1.0
-     A_layer = h_layer - D_avg
+     A_layer = eta_layer - D_avg
   else
      if (m < 0.5) then
         psi = zeta**(1./a)
