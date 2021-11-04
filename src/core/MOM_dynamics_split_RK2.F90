@@ -910,7 +910,7 @@ subroutine step_MOM_dyn_split_RK2(u, v, h, tv, visc, Time_local, dt, forces, p_s
   if (CS%id_u_BT_accel > 0) call post_data(CS%id_u_BT_accel, CS%u_accel_bt, CS%diag)
   if (CS%id_v_BT_accel > 0) call post_data(CS%id_v_BT_accel, CS%v_accel_bt, CS%diag)
 
-! Calculate effective areas and post data
+  ! Calculate effective areas and post data
   if (CS%id_ueffA > 0) then
      ueffA = uh / u_av
      call post_data(CS%id_ueffA, ueffA, CS%diag)
