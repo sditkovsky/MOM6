@@ -1,4 +1,4 @@
-!> Function for calculating curve fit for porous barriers.
+!> Function for calculating curve fit for porous topography.
 !written by sjd
 module MOM_porous_barriers
 
@@ -26,8 +26,7 @@ contains
 
 
 subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
-    !eta_bt, halo_size, eta_to_m not currently used
-    
+  !eta_bt, halo_size, eta_to_m not currently used
   !variables needed to call find_eta
   type(ocean_grid_type),                      intent(in)  :: G   !< The ocean's grid structure.
   type(verticalGrid_type),                    intent(in)  :: GV     !< The ocean's vertical grid structure.
@@ -54,7 +53,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
        A_layer, & !< integral of fractional open width from bottom to current layer[nondim]
        A_layer_prev, & !< integral of fractional open width from bottom to previous layer [nondim]
        eta_s !< layer height used for fit [Z ~> m]
-  
+
   isd = G%isd; ied = G%ied; jsd = G%jsd; jed = G%jed
   IsdB = G%IsdB; IedB = G%IedB; JsdB = G%JsdB; JedB = G%JedB
 
@@ -67,7 +66,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   !do I need to rescale eta here?
   call find_eta(h, tv, G, GV, US, eta)
 
-  do I=IsdB,IedB; do j=jsd,jed 
+  do I=IsdB,IedB; do j=jsd,jed
      if (G%porous_DavgU(I,j) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
@@ -88,7 +87,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
            endif; enddo
        endif; enddo; enddo
 
-  do i=isd,ied; do J=JsdB,JedB 
+  do i=isd,ied; do J=JsdB,JedB
      if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(i,J,K), eta(i+1,J,K)) !take shallower layer height
@@ -113,15 +112,15 @@ end subroutine por_widths
 
 subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
 !subroutine to calculate the profile fit for a layer
- 
+
   real,            intent(in) :: D_min !< minimum topographic height [m]
   real,            intent(in) :: D_max !< maximum topographic height [m]
   real,            intent(in) :: D_avg !< mean topographic height [m]
-  real,            intent(in) :: eta_layer !< height of interface [m] 
+  real,            intent(in) :: eta_layer !< height of interface [m]
   real,            intent(out) :: w_layer !< frac. open interface width of current layer [nondim]
   real,            intent(out) :: A_layer !< frac. open face area of current layer [nondim]
   !local variables
-  real m, a, zeta, psi, psi_int 
+  real m, a, zeta, psi, psi_int
   !psi_int is the integral of psi from 0 to zeta
 
   !three parameter fit from Adcroft 2013
@@ -129,7 +128,7 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
   a = (1. - m)/m
 
   zeta = (eta_layer - D_min)/(D_max - D_min)
-  
+
   if (eta_layer <= D_min) then
      w_layer = 0.0
      A_layer = 0.0
@@ -143,7 +142,7 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
      elseif (m == 0.5) then
         psi = zeta
         psi_int = 0.5*zeta*zeta
-     else 
+     else
         psi = 1. - (1. - zeta)**a
         psi_int = zeta - m + m*((1-zeta)**(1/m))
      endif

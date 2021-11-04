@@ -401,7 +401,7 @@ type, public :: MOM_control_struct ; private
   type(ODA_CS), pointer :: odaCS => NULL() !< a pointer to the control structure for handling
                                 !! ensemble model state vectors and data assimilation
                                 !! increments and priors
-  type(porous_barrier_ptrs) :: pbv !< porous barrier fractional cell metrics  
+  type(porous_barrier_ptrs) :: pbv !< porous barrier fractional cell metrics
   real ALLOCABLE_, dimension(NIMEMB_PTR_,NJMEM_,NKMEM_) &
                             :: por_face_areaU !< fractional open area of U-faces [nondim]
   real ALLOCABLE_, dimension(NIMEM_,NJMEMB_PTR_,NKMEM_) &
@@ -2344,7 +2344,7 @@ subroutine initialize_MOM(Time, Time_init, param_file, dirs, CS, restart_CSp, &
   ALLOC_(CS%ave_ssh_ibc(isd:ied,jsd:jed)) ; CS%ave_ssh_ibc(:,:) = 0.0
   ALLOC_(CS%eta_av_bc(isd:ied,jsd:jed)) ; CS%eta_av_bc(:,:) = 0.0 ! -G%Z_ref
   CS%time_in_cycle = 0.0 ; CS%time_in_thermo_cycle = 0.0
-  
+
   !allocate porous topography variables
   ALLOC_(CS%por_face_areaU(IsdB:IedB,jsd:jed,nz)) ; CS%por_face_areaU(:,:,:) = 1.0
   ALLOC_(CS%por_face_areaV(isd:ied,JsdB:JedB,nz)) ; CS%por_face_areaV(:,:,:) = 1.0

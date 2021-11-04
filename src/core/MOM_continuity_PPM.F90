@@ -149,7 +149,8 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhb
   !    First, advect zonally.
     LB%ish = G%isc ; LB%ieh = G%iec
     LB%jsh = G%jsc-stencil ; LB%jeh = G%jec+stencil
-    call zonal_mass_flux(u, hin, uh, dt, G, GV, US, CS, LB, OBC, pbv%por_face_areaU, uhbt, visc_rem_u, u_cor, BT_cont)
+    call zonal_mass_flux(u, hin, uh, dt, G, GV, US, CS, LB, OBC, &
+      pbv%por_face_areaU, uhbt, visc_rem_u, u_cor, BT_cont)
 
     call cpu_clock_begin(id_clock_update)
     !$OMP parallel do default(shared)
@@ -164,7 +165,8 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhb
 
     !    Now advect meridionally, using the updated thicknesses to determine
     !  the fluxes.
-    call meridional_mass_flux(v, h, vh, dt, G, GV, US, CS, LB, OBC, pbv%por_face_areaV, vhbt, visc_rem_v, v_cor, BT_cont)
+    call meridional_mass_flux(v, h, vh, dt, G, GV, US, CS, LB, OBC, &
+      pbv%por_face_areaV, vhbt, visc_rem_v, v_cor, BT_cont)
 
     call cpu_clock_begin(id_clock_update)
     !$OMP parallel do default(shared)
@@ -180,7 +182,8 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhb
     LB%ish = G%isc-stencil ; LB%ieh = G%iec+stencil
     LB%jsh = G%jsc ; LB%jeh = G%jec
 
-    call meridional_mass_flux(v, hin, vh, dt, G, GV, US, CS, LB, OBC, pbv%por_face_areaV, vhbt, visc_rem_v, v_cor, BT_cont)
+    call meridional_mass_flux(v, hin, vh, dt, G, GV, US, CS, LB, OBC, &
+      pbv%por_face_areaV, vhbt, visc_rem_v, v_cor, BT_cont)
 
     call cpu_clock_begin(id_clock_update)
     !$OMP parallel do default(shared)
@@ -192,7 +195,8 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhb
   !    Now advect zonally, using the updated thicknesses to determine
   !  the fluxes.
     LB%ish = G%isc ; LB%ieh = G%iec ; LB%jsh = G%jsc ; LB%jeh = G%jec
-    call zonal_mass_flux(u, h, uh, dt, G, GV, US, CS, LB, OBC, pbv%por_face_areaU, uhbt, visc_rem_u, u_cor, BT_cont)
+    call zonal_mass_flux(u, h, uh, dt, G, GV, US, CS, LB, OBC, &
+      pbv%por_face_areaU, uhbt, visc_rem_u, u_cor, BT_cont)
 
     call cpu_clock_begin(id_clock_update)
     !$OMP parallel do default(shared)

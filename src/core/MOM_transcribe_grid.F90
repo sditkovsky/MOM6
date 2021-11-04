@@ -70,7 +70,7 @@ subroutine copy_dyngrid_to_MOM_grid(dG, oG, US)
     oG%dxCu(I,j) = dG%dxCu(I+ido,j+jdo)
     oG%dyCu(I,j) = dG%dyCu(I+ido,j+jdo)
     oG%dy_Cu(I,j) = dG%dy_Cu(I+ido,j+jdo)
-    
+
     oG%porous_DminU(I,j) = dG%porous_DminU(I+ido,j+jdo)
     oG%porous_DmaxU(I,j) = dG%porous_DmaxU(I+ido,j+jdo)
     oG%porous_DavgU(I,j) = dG%porous_DavgU(I+ido,j+jdo)

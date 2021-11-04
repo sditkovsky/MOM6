@@ -446,7 +446,6 @@ subroutine step_MOM_dyn_unsplit(u, v, h, tv, visc, Time_local, dt, forces, &
      call post_data(CS%id_veffA, veffA, CS%diag)
   endif
 
-  
 
 ! h_av = (h + hp)/2
   do k=1,nz

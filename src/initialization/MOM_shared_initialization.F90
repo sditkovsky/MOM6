@@ -970,7 +970,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
       ! Store and check the relevant values.
       if (found_u) then
         u_pt = u_pt + 1
-        if (found_u_por == .false.) then
+        if (found_u_por .eqv. .false.) then
            read(line(isu+8:),*) u_lon(1:2,u_pt), u_lat(1:2,u_pt), u_width(u_pt)
         elseif (found_u_por) then
            read(line(isu_por+12:),*) u_lon(1:2,u_pt), u_lat(1:2,u_pt), u_width(u_pt), &
@@ -999,7 +999,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
           if (u_width(u_pt) < 0.0) &
             call MOM_error(WARNING, "reset_face_lengths_list : Negative "//&
                "u-width found when reading line "//trim(line)//" from file "//&
-               trim(filename))                                                                                                                             
+               trim(filename))
           if (Dmin_u(u_pt) > Dmax_u(u_pt)) &
             call MOM_error(WARNING, "reset_face_lengths_list : Out-of-order "//&
                "topographical min/max found when reading line "//trim(line)//" from file "//&
@@ -1007,8 +1007,8 @@ subroutine reset_face_lengths_list(G, param_file, US)
         endif
       elseif (found_v) then
         v_pt = v_pt + 1
-        if (found_v_por == .false.) then
-           read(line(isv+8:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt) 
+        if (found_v_por .eqv. .false.) then
+           read(line(isv+8:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt)
         elseif (found_v_por) then
            read(line(isv+12:),*) v_lon(1:2,v_pt), v_lat(1:2,v_pt), v_width(v_pt), &
                 Dmin_v(v_pt), Dmax_v(v_pt), Davg_v(v_pt)
@@ -1036,7 +1036,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
           if (v_width(v_pt) < 0.0) &
             call MOM_error(WARNING, "reset_face_lengths_list : Negative "//&
                "v-width found when reading line "//trim(line)//" from file "//&
-               trim(filename))                                                                                                                             
+               trim(filename))
           if (Dmin_v(v_pt) > Dmax_v(v_pt)) &
             call MOM_error(WARNING, "reset_face_lengths_list : Out-of-order "//&
                "topographical min/max found when reading line "//trim(line)//" from file "//&
@@ -1060,11 +1060,10 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_m >= u_lon(1,npt)) .and. (lon_m <= u_lon(2,npt)))) ) then
 
         G%dy_Cu(I,j) = G%mask2dCu(I,j) * m_to_L*min(L_to_m*G%dyCu(I,j), max(u_width(npt), 0.0))
-        
         G%porous_DminU(I,j) = Dmin_u(npt)
         G%porous_DmaxU(I,j) = Dmax_u(npt)
         G%porous_DavgU(I,j) = Davg_u(npt)
-        
+
         if (j>=G%jsc .and. j<=G%jec .and. I>=G%isc .and. I<=G%iec) then ! Limit messages/checking to compute domain
 
           if ( G%mask2dCu(I,j) == 0.0 )  then
@@ -1105,7 +1104,7 @@ subroutine reset_face_lengths_list(G, param_file, US)
         G%porous_DmaxV(i,J) = Dmax_v(npt)
         G%porous_DavgV(i,J) = Davg_v(npt)
 
-        if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain 
+        if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain
           if ( G%mask2dCv(i,J) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCv=0 at ",lat,lon," (",&
                   v_lat(1,npt), v_lat(2,npt), v_lon(1,npt), v_lon(2,npt),") so grid metric is unmodified."
