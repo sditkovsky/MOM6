@@ -29,8 +29,6 @@ implicit none ; private
     logical :: requires_src_info = .false. !< Unknown
     real    :: src_var_unit_conversion = 1.0 !< This factor depends on the tracer. Ask Jasmin
     real    :: src_var_valid_min = 0.0 !< Unknown
-    real, ALLOCATABLE, dimension(:,:,:)  :: boundary_forcing_tend !liao
-    integer :: diag_id_boundary_forcing_tend = -1 !liao
   end type g_tracer_type
 
   !> Unknown
