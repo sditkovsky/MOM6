@@ -355,12 +355,12 @@ subroutine rotate_dyngrid(G_in, G, US, turns)
   call rotate_array_pair(G_in%dxCv, G_in%dyCu, turns, G%dxCv, G%dyCu)
   call rotate_array_pair(G_in%dx_Cv, G_in%dy_Cu, turns, G%dx_Cv, G%dy_Cu)
 
-  !call rotate_array_pair(G_in%porous_DminV, G_in%porous_DminU, turns, &
-  !    G%porous_DminV, G%porous_DminU)
-  !call rotate_array_pair(G_in%porous_DmaxV, G_in%porous_DmaxU, turns, &
-  !    G%porous_DmaxV, G%porous_DmaxU)
-  !call rotate_array_pair(G_in%porous_DavgV, G_in%porous_DavgU, turns, &
-  !    G%porous_DavgV, G%porous_DavgU)
+  call rotate_array_pair(G_in%porous_DminV, G_in%porous_DminU, turns, &
+      G%porous_DminV, G%porous_DminU)
+  call rotate_array_pair(G_in%porous_DmaxV, G_in%porous_DmaxU, turns, &
+      G%porous_DmaxV, G%porous_DmaxU)
+  call rotate_array_pair(G_in%porous_DavgV, G_in%porous_DavgU, turns, &
+      G%porous_DavgV, G%porous_DavgU)
 
   call rotate_array_pair(G_in%mask2dCu, G_in%mask2dCv, turns, &
       G%mask2dCu, G%mask2dCv)
