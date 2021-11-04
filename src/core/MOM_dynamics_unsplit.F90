@@ -437,12 +437,16 @@ subroutine step_MOM_dyn_unsplit(u, v, h, tv, visc, Time_local, dt, forces, &
 
 ! Calculate effective areas and post data
   if (CS%id_ueffA > 0) then
-     ueffA = uh / u
+     do k=1,nz ; do j=js,je ; do I=Isq,Ieq
+        if (abs(up(I,j,k)) > 0.) ueffA(I,j,k) = uh(I,j,k)/up(I,j,k)
+     enddo ; enddo ; enddo
      call post_data(CS%id_ueffA, ueffA, CS%diag)
   endif
 
   if (CS%id_veffA > 0) then
-     veffA = vh / v
+     do k=1,nz ; do J=Jsq,Jeq ; do i=is,ie
+        if (abs(vp(i,J,k)) > 0.) veffA(i,J,k) = vh(i,J,k)/vp(i,J,k)
+     enddo ; enddo ; enddo
      call post_data(CS%id_veffA, veffA, CS%diag)
   endif
 
