@@ -70,7 +70,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
      if (G%porous_DavgU(I,j) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
-           eta_s = (eta(I,j,K) + eta(I+1,j,K)) / 2.0 !take arithmetic mean
+           eta_s = (US%Z_to_m*eta(I,j,K) + US%Z_to_m*eta(I+1,j,K)) / 2.0 !take arithmetic mean
            if (eta_s <= G%porous_DminU(I,j)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
               A_layer_prev = 0.0
@@ -81,7 +81,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthU(I,j,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/(eta(I,j,K)-eta(I,j,K+1))
+                 pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/&
+                 (US%Z_to_m*eta(I,j,K)-US%Z_to_m*eta(I,j,K+1))
               endif
                A_layer_prev = A_layer
            endif; enddo
@@ -91,7 +92,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
      if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(i,J,K), eta(i+1,J,K)) !take shallower layer height
-           eta_s = (eta(i,J,K) + eta(i+1,J,K)) / 2.0 !take arithmetic mean
+           eta_s = (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i+1,J,K)) / 2.0 !take arithmetic mean
            if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_prev = 0.0
@@ -102,7 +103,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthV(i,J,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/(eta(i,J,K)-eta(i,J,K+1))
+                 pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/&
+                 (US%Z_to_m*eta(i,J,K)-US%Z_to_m*eta(i,J,K+1))
               endif
                A_layer_prev = A_layer
            endif; enddo
