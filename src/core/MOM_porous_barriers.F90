@@ -92,7 +92,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
      if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(i,J,K), eta(i+1,J,K)) !take shallower layer height
-           eta_s = (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i+1,J,K)) / 2.0 !take arithmetic mean
+           eta_s = (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i,J+1,K)) / 2.0 !take arithmetic mean
            if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_prev = 0.0
