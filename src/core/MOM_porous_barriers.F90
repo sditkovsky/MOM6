@@ -24,7 +24,6 @@ end interface porous_widths
 
 contains
 
-
 subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   !eta_bt, halo_size, eta_to_m not currently used
   !variables needed to call find_eta
@@ -49,11 +48,11 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
 
   !local variables
   integer ii, i, j, k, nk, isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB
-  real w_layer, & !< fractional open width of layer interface [nondim]
-       A_layer, & !< integral of fractional open width from bottom to current layer[nondim]
-       A_layer_prev, & !< integral of fractional open width from bottom to previous layer [nondim]
-       eta_s !< layer height used for fit [Z ~> m]
-
+  real w_layer, & ! fractional open width of layer interface [nondim]
+       A_layer, & ! integral of fractional open width from bottom to current layer[nondim]
+       A_layer_prev, & ! integral of fractional open width from bottom to previous layer [nondim]
+       eta_s, & ! layer height used for fit [Z ~> m]
+       eta_prev ! interface height of previous layer [Z ~> m]
   isd = G%isd; ied = G%ied; jsd = G%jsd; jed = G%jed
   IsdB = G%IsdB; IedB = G%IedB; JsdB = G%JsdB; JedB = G%JedB
 
@@ -63,14 +62,13 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   nk = SZK_(G)
 
   !currently no treatment for using optional find_eta arguments if present
-  !do I need to rescale eta here?
   call find_eta(h, tv, G, GV, US, eta)
 
   do I=IsdB,IedB; do j=jsd,jed
      if (G%porous_DavgU(I,j) < 0.) then
         do K = nk+1,1,-1
            !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
-           eta_s = (US%Z_to_m*eta(I,j,K) + US%Z_to_m*eta(I+1,j,K)) / 2.0 !take arithmetic mean
+           eta_s = 0.5 * (US%Z_to_m*eta(I,j,K) + US%Z_to_m*eta(I+1,j,K)) !take arithmetic mean
            if (eta_s <= G%porous_DminU(I,j)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
               A_layer_prev = 0.0
@@ -82,8 +80,9 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
               pbv%por_layer_widthU(I,j,K) = w_layer
               if (k <= nk) then
                  pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/&
-                 (US%Z_to_m*eta(I,j,K)-US%Z_to_m*eta(I,j,K+1))
+                 (US%Z_to_m*eta_s-US%Z_to_m*eta_prev)
               endif
+               eta_prev = eta_s
                A_layer_prev = A_layer
            endif; enddo
        endif; enddo; enddo
@@ -91,8 +90,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   do i=isd,ied; do J=JsdB,JedB
      if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
-           !eta_s = max(eta(i,J,K), eta(i+1,J,K)) !take shallower layer height
-           eta_s = (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i,J+1,K)) / 2.0 !take arithmetic mean
+           !eta_s = max(eta(i,J,K), eta(i,J+1,K)) !take shallower layer height
+           eta_s = 0.5 * (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i,J+1,K)) !take arithmetic mean
            if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_prev = 0.0
@@ -104,8 +103,9 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
               pbv%por_layer_widthV(i,J,K) = w_layer
               if (k <= nk) then
                  pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/&
-                 (US%Z_to_m*eta(i,J,K)-US%Z_to_m*eta(i,J,K+1))
+                 (US%Z_to_m*eta_s-US%Z_to_m*eta_prev)
               endif
+               eta_prev = eta_s
                A_layer_prev = A_layer
            endif; enddo
        endif; enddo; enddo
@@ -122,8 +122,10 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
   real,            intent(out) :: w_layer !< frac. open interface width of current layer [nondim]
   real,            intent(out) :: A_layer !< frac. open face area of current layer [nondim]
   !local variables
-  real m, a, zeta, psi, psi_int
-  !psi_int is the integral of psi from 0 to zeta
+  real m, a, &   !convenience constant for fit [nondim]
+       zeta, &   !normalized vertical coordinate [nondim]
+       psi, &    !fractional width of layer between Dmin and Dmax [nondim]
+       psi_int & !integral of psi from 0 to zeta
 
   !three parameter fit from Adcroft 2013
   m = (D_avg - D_min)/(D_max - D_min)
