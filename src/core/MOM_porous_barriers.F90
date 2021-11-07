@@ -125,7 +125,7 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
   real m, a, &   !convenience constant for fit [nondim]
        zeta, &   !normalized vertical coordinate [nondim]
        psi, &    !fractional width of layer between Dmin and Dmax [nondim]
-       psi_int & !integral of psi from 0 to zeta
+       psi_int !integral of psi from 0 to zeta
 
   !three parameter fit from Adcroft 2013
   m = (D_avg - D_min)/(D_max - D_min)

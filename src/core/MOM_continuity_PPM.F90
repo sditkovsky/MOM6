@@ -363,8 +363,8 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
         if (CS%aggress_adjust) then
           do k=1,nz ; do I=ish-1,ieh
             if (CS%vol_CFL) then
-              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i,j))
-              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i+1,j))
+              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j), 1000.0*G%dxT(i,j))
+              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j), 1000.0*G%dxT(i+1,j))
             else ; dx_W = G%dxT(i,j) ; dx_E = G%dxT(i+1,j) ; endif
 
             du_lim = 0.499*((dx_W*I_dt - u(I,j,k)) + MIN(0.0,u(I-1,j,k)))
@@ -378,8 +378,8 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
         else
           do k=1,nz ; do I=ish-1,ieh
             if (CS%vol_CFL) then
-              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i,j))
-              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i+1,j))
+              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j), 1000.0*G%dxT(i,j))
+              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j), 1000.0*G%dxT(i+1,j))
             else ; dx_W = G%dxT(i,j) ; dx_E = G%dxT(i+1,j) ; endif
 
             if (du_max_CFL(I) * visc_rem(I,k) > dx_W*CFL_dt - u(I,j,k)) &
@@ -392,8 +392,8 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
         if (CS%aggress_adjust) then
           do k=1,nz ; do I=ish-1,ieh
             if (CS%vol_CFL) then
-              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i,j))
-              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i+1,j))
+              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j), 1000.0*G%dxT(i,j))
+              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j), 1000.0*G%dxT(i+1,j))
             else ; dx_W = G%dxT(i,j) ; dx_E = G%dxT(i+1,j) ; endif
 
             du_max_CFL(I) = MIN(du_max_CFL(I), 0.499 * &
@@ -404,8 +404,8 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
         else
           do k=1,nz ; do I=ish-1,ieh
             if (CS%vol_CFL) then
-              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i,j))
-              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j)*por_face_areaU(I,j,k), 1000.0*G%dxT(i+1,j))
+              dx_W = ratio_max(G%areaT(i,j), G%dy_Cu(I,j), 1000.0*G%dxT(i,j))
+              dx_E = ratio_max(G%areaT(i+1,j), G%dy_Cu(I,j), 1000.0*G%dxT(i+1,j))
             else ; dx_W = G%dxT(i,j) ; dx_E = G%dxT(i+1,j) ; endif
 
             du_max_CFL(I) = MIN(du_max_CFL(I), dx_W*CFL_dt - u(I,j,k))
@@ -568,14 +568,14 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   do I=ish-1,ieh ; if (do_I(I)) then
     ! Set new values of uh and duhdu.
     if (u(I) > 0.0) then
-      if (vol_CFL) then ; CFL = (u(I) * dt) * ((G%dy_Cu(I,j)* por_face_areaU(I)) * G%IareaT(i,j))
+      if (vol_CFL) then ; CFL = (u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i,j))
       else ; CFL = u(I) * dt * G%IdxT(i,j) ; endif
       curv_3 = h_L(i) + h_R(i) - 2.0*h(i)
       uh(I) = (G%dy_Cu(I,j) * por_face_areaU(I))* u(I) * &
           (h_R(i) + CFL * (0.5*(h_L(i) - h_R(i)) + curv_3*(CFL - 1.5)))
       h_marg = h_R(i) + CFL * ((h_L(i) - h_R(i)) + 3.0*curv_3*(CFL - 1.0))
     elseif (u(I) < 0.0) then
-      if (vol_CFL) then ; CFL = (-u(I) * dt) * ((G%dy_Cu(I,j)* por_face_areaU(I)) * G%IareaT(i+1,j))
+      if (vol_CFL) then ; CFL = (-u(I) * dt) * (G%dy_Cu(I,j) * G%IareaT(i+1,j))
       else ; CFL = -u(I) * dt * G%IdxT(i+1,j) ; endif
       curv_3 = h_L(i+1) + h_R(i+1) - 2.0*h(i+1)
       uh(I) = (G%dy_Cu(I,j) * por_face_areaU(I)) * u(I) * &
@@ -650,13 +650,13 @@ subroutine zonal_face_thickness(u, h, h_L, h_R, h_u, dt, G, GV, US, LB, vol_CFL,
   !$OMP parallel do default(shared) private(CFL,curv_3,h_marg,h_avg)
   do k=1,nz ; do j=jsh,jeh ; do I=ish-1,ieh
     if (u(I,j,k) > 0.0) then
-      if (vol_CFL) then ; CFL = (u(I,j,k) * dt) * ((G%dy_Cu(I,j)*por_face_areaU(I,j,k)) * G%IareaT(i,j))
+      if (vol_CFL) then ; CFL = (u(I,j,k) * dt) * (G%dy_Cu(I,j) * G%IareaT(i,j))
       else ; CFL = u(I,j,k) * dt * G%IdxT(i,j) ; endif
       curv_3 = h_L(i,j,k) + h_R(i,j,k) - 2.0*h(i,j,k)
       h_avg = h_R(i,j,k) + CFL * (0.5*(h_L(i,j,k) - h_R(i,j,k)) + curv_3*(CFL - 1.5))
       h_marg = h_R(i,j,k) + CFL * ((h_L(i,j,k) - h_R(i,j,k)) + 3.0*curv_3*(CFL - 1.0))
     elseif (u(I,j,k) < 0.0) then
-      if (vol_CFL) then ; CFL = (-u(I,j,k)*dt) * ((G%dy_Cu(I,j)*por_face_areaU(I,j,k)) * G%IareaT(i+1,j))
+      if (vol_CFL) then ; CFL = (-u(I,j,k)*dt) * (G%dy_Cu(I,j) * G%IareaT(i+1,j))
       else ; CFL = -u(I,j,k) * dt * G%IdxT(i+1,j) ; endif
       curv_3 = h_L(i+1,j,k) + h_R(i+1,j,k) - 2.0*h(i+1,j,k)
       h_avg = h_L(i+1,j,k) + CFL * (0.5*(h_R(i+1,j,k)-h_L(i+1,j,k)) + curv_3*(CFL - 1.5))
@@ -1183,8 +1183,8 @@ subroutine meridional_mass_flux(v, h_in, vh, dt, G, GV, US, CS, LB, OBC, por_fac
         if (CS%aggress_adjust) then
           do k=1,nz ; do i=ish,ieh
             if (CS%vol_CFL) then
-              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j))
-              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j+1))
+              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j), 1000.0*G%dyT(i,j))
+              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j), 1000.0*G%dyT(i,j+1))
             else ; dy_S = G%dyT(i,j) ; dy_N = G%dyT(i,j+1) ; endif
             dv_lim = 0.499*((dy_S*I_dt - v(i,J,k)) + MIN(0.0,v(i,J-1,k)))
             if (dv_max_CFL(i) * visc_rem(i,k) > dv_lim) &
@@ -1197,8 +1197,8 @@ subroutine meridional_mass_flux(v, h_in, vh, dt, G, GV, US, CS, LB, OBC, por_fac
         else
           do k=1,nz ; do i=ish,ieh
             if (CS%vol_CFL) then
-              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j))
-              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j+1))
+              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j), 1000.0*G%dyT(i,j))
+              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j), 1000.0*G%dyT(i,j+1))
             else ; dy_S = G%dyT(i,j) ; dy_N = G%dyT(i,j+1) ; endif
             if (dv_max_CFL(i) * visc_rem(i,k) > dy_S*CFL_dt - v(i,J,k)) &
               dv_max_CFL(i) = (dy_S*CFL_dt - v(i,J,k)) / visc_rem(i,k)
@@ -1210,8 +1210,8 @@ subroutine meridional_mass_flux(v, h_in, vh, dt, G, GV, US, CS, LB, OBC, por_fac
         if (CS%aggress_adjust) then
           do k=1,nz ; do i=ish,ieh
             if (CS%vol_CFL) then
-              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j))
-              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j+1))
+              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j), 1000.0*G%dyT(i,j))
+              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j), 1000.0*G%dyT(i,j+1))
             else ; dy_S = G%dyT(i,j) ; dy_N = G%dyT(i,j+1) ; endif
             dv_max_CFL(i) = min(dv_max_CFL(i), 0.499 * &
                         ((dy_S*I_dt - v(i,J,k)) + MIN(0.0,v(i,J-1,k))) )
@@ -1221,8 +1221,8 @@ subroutine meridional_mass_flux(v, h_in, vh, dt, G, GV, US, CS, LB, OBC, por_fac
         else
           do k=1,nz ; do i=ish,ieh
             if (CS%vol_CFL) then
-              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j))
-              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j)*por_face_areaV(i,J,k), 1000.0*G%dyT(i,j+1))
+              dy_S = ratio_max(G%areaT(i,j), G%dx_Cv(I,j), 1000.0*G%dyT(i,j))
+              dy_N = ratio_max(G%areaT(i,j+1), G%dx_Cv(I,j), 1000.0*G%dyT(i,j+1))
             else ; dy_S = G%dyT(i,j) ; dy_N = G%dyT(i,j+1) ; endif
             dv_max_CFL(i) = min(dv_max_CFL(i), dy_S*CFL_dt - v(i,J,k))
             dv_min_CFL(i) = max(dv_min_CFL(i), -(dy_N*CFL_dt + v(i,J,k)))
@@ -1386,7 +1386,7 @@ subroutine merid_flux_layer(v, h, h_L, h_R, vh, dvhdv, visc_rem, dt, G, US, J, &
 
   do i=ish,ieh ; if (do_I(i)) then
     if (v(i) > 0.0) then
-      if (vol_CFL) then ; CFL = (v(i) * dt) * ((G%dx_Cv(i,J)*por_face_areaV(i,J)) * G%IareaT(i,j))
+      if (vol_CFL) then ; CFL = (v(i) * dt) * (G%dx_Cv(i,J) * G%IareaT(i,j))
       else ; CFL = v(i) * dt * G%IdyT(i,j) ; endif
       curv_3 = h_L(i,j) + h_R(i,j) - 2.0*h(i,j)
       vh(i) = (G%dx_Cv(i,J)*por_face_areaV(i,J)) * v(i) * ( h_R(i,j) + CFL * &
@@ -1394,7 +1394,7 @@ subroutine merid_flux_layer(v, h, h_L, h_R, vh, dvhdv, visc_rem, dt, G, US, J, &
       h_marg = h_R(i,j) + CFL * ((h_L(i,j) - h_R(i,j)) + &
                                   3.0*curv_3*(CFL - 1.0))
     elseif (v(i) < 0.0) then
-      if (vol_CFL) then ; CFL = (-v(i) * dt) * ((G%dx_Cv(i,J)*por_face_areaV(i,J)) * G%IareaT(i,j+1))
+      if (vol_CFL) then ; CFL = (-v(i) * dt) * (G%dx_Cv(i,J) * G%IareaT(i,j+1))
       else ; CFL = -v(i) * dt * G%IdyT(i,j+1) ; endif
       curv_3 = h_L(i,j+1) + h_R(i,j+1) - 2.0*h(i,j+1)
       vh(i) = (G%dx_Cv(i,J)*por_face_areaV(i,J)) * v(i) * ( h_L(i,j+1) + CFL * &
@@ -1470,14 +1470,14 @@ subroutine merid_face_thickness(v, h, h_L, h_R, h_v, dt, G, GV, US, LB, vol_CFL,
   !$OMP parallel do default(shared) private(CFL,curv_3,h_marg,h_avg)
   do k=1,nz ; do J=jsh-1,jeh ; do i=ish,ieh
     if (v(i,J,k) > 0.0) then
-      if (vol_CFL) then ; CFL = (v(i,J,k) * dt) * ((G%dx_Cv(i,J)*por_face_areaV(i,J,k)) * G%IareaT(i,j))
+      if (vol_CFL) then ; CFL = (v(i,J,k) * dt) * (G%dx_Cv(i,J) * G%IareaT(i,j))
       else ; CFL = v(i,J,k) * dt * G%IdyT(i,j) ; endif
       curv_3 = h_L(i,j,k) + h_R(i,j,k) - 2.0*h(i,j,k)
       h_avg = h_R(i,j,k) + CFL * (0.5*(h_L(i,j,k) - h_R(i,j,k)) + curv_3*(CFL - 1.5))
       h_marg = h_R(i,j,k) + CFL * ((h_L(i,j,k) - h_R(i,j,k)) + &
                                 3.0*curv_3*(CFL - 1.0))
     elseif (v(i,J,k) < 0.0) then
-      if (vol_CFL) then ; CFL = (-v(i,J,k)*dt) * ((G%dx_Cv(i,J)*por_face_areaV(i,J,k)) * G%IareaT(i,j+1))
+      if (vol_CFL) then ; CFL = (-v(i,J,k)*dt) * (G%dx_Cv(i,J) * G%IareaT(i,j+1))
       else ; CFL = -v(i,J,k) * dt * G%IdyT(i,j+1) ; endif
       curv_3 = h_L(i,j+1,k) + h_R(i,j+1,k) - 2.0*h(i,j+1,k)
       h_avg = h_L(i,j+1,k) + CFL * (0.5*(h_R(i,j+1,k)-h_L(i,j+1,k)) + curv_3*(CFL - 1.5))
