@@ -117,7 +117,6 @@ character*(20), parameter :: PV_ADV_UPWIND1_STRING = "PV_ADV_UPWIND1"
 contains
 
 !> Calculates the Coriolis and momentum advection contributions to the acceleration.
-
 subroutine CorAdCalc(u, v, h, uh, vh, CAu, CAv, OBC, AD, G, GV, US, CS, pbv)
   type(ocean_grid_type),                      intent(in)    :: G  !< Ocen grid structure
   type(verticalGrid_type),                    intent(in)    :: GV !< Vertical grid structure
@@ -125,9 +124,9 @@ subroutine CorAdCalc(u, v, h, uh, vh, CAu, CAv, OBC, AD, G, GV, US, CS, pbv)
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)), intent(in)    :: v  !< Meridional velocity [L T-1 ~> m s-1]
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)),  intent(in)    :: h  !< Layer thickness [H ~> m or kg m-2]
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)), intent(in)    :: uh !< Zonal transport u*h*dy
-                                                                 !! [H L2 T-1 ~> m3 s-1 or kg s-1]
+                                                                  !! [H L2 T-1 ~> m3 s-1 or kg s-1]
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)), intent(in)    :: vh !< Meridional transport v*h*dx
-                                                                 !! [H L2 T-1 ~> m3 s-1 or kg s-1]
+                                                                  !! [H L2 T-1 ~> m3 s-1 or kg s-1]
   real, dimension(SZIB_(G),SZJ_(G),SZK_(GV)), intent(out)   :: CAu !< Zonal acceleration due to Coriolis
                                                                   !! and momentum advection [L T-2 ~> m s-2].
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)), intent(out)   :: CAv !< Meridional acceleration due to Coriolis
