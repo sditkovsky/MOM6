@@ -61,7 +61,7 @@ subroutine continuity(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhbt, v
   type(unit_scale_type),   intent(in)    :: US  !< A dimensional unit scaling type
   type(continuity_CS),     pointer       :: CS  !< Control structure for mom_continuity.
   type(ocean_OBC_type),    pointer       :: OBC !< Open boundaries control structure.
-  type(porous_barrier_ptrs), intent(in) :: pbv  !< porous barrier fractional cell metrics
+  type(porous_barrier_ptrs), intent(in)  :: pbv !< porous barrier fractional cell metrics
   real, dimension(SZIB_(G),SZJ_(G)), &
                  optional, intent(in)    :: uhbt !< The vertically summed volume
                                                 !! flux through zonal faces [H L2 T-1 ~> m3 s-1 or kg s-1].

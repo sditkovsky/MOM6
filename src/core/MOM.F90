@@ -805,7 +805,6 @@ subroutine step_MOM(forces_in, fluxes_in, sfc_state, Time_start, time_int_in, CS
         enddo ; enddo
       endif
 
-
       call step_MOM_dynamics(forces, CS%p_surf_begin, CS%p_surf_end, dt, &
                              dt_therm_here, bbl_time_int, CS, &
                              Time_local, Waves=Waves)
@@ -1031,10 +1030,8 @@ subroutine step_MOM_dynamics(forces, p_surf_begin, p_surf_end, dt, dt_thermo, &
   integer :: i, j, k, is, ie, js, je, Isq, Ieq, Jsq, Jeq, nz
   integer :: isd, ied, jsd, jed, IsdB, IedB, JsdB, JedB
 
-  !sjd
-  real, dimension(SZI_(CS%G),SZJ_(CS%G),SZK_(CS%G)+1) :: eta_por !< layer interface heights
-                                                    !! [Z ~> m] or 1/eta_to_m m).
-
+  real, dimension(SZI_(CS%G),SZJ_(CS%G),SZK_(CS%G)+1) :: eta_por ! layer interface heights
+                                                    !! for porous topo. [Z ~> m or 1/eta_to_m]
   G => CS%G ; GV => CS%GV ; US => CS%US ; IDs => CS%IDs
   is   = G%isc  ; ie   = G%iec  ; js   = G%jsc  ; je   = G%jec ; nz = GV%ke
   Isq  = G%IscB ; Ieq  = G%IecB ; Jsq  = G%JscB ; Jeq  = G%JecB
@@ -1077,6 +1074,7 @@ subroutine step_MOM_dynamics(forces, p_surf_begin, p_surf_end, dt, dt_thermo, &
     if (showCallTree) call callTree_wayPoint("done with set_viscous_BBL (step_MOM)")
     call disable_averaging(CS%diag)
   endif
+
 
   if (CS%do_dynamics .and. CS%split) then !--------------------------- start SPLIT
     ! This section uses a split time stepping scheme for the dynamic equations,
@@ -1314,13 +1312,10 @@ subroutine step_MOM_thermo(CS, G, GV, US, u, v, h, tv, fluxes, dtdia, &
   integer :: halo_sz ! The size of a halo where data must be valid.
   integer :: i, j, k, is, ie, js, je, nz
 
-  !sjd
-  real, dimension(SZI_(CS%G),SZJ_(CS%G),SZK_(CS%G)+1) :: eta_por !< layer interface heights
-                                                    !! [Z ~> m] or 1/eta_to_m m).
-
+  real, dimension(SZI_(CS%G),SZJ_(CS%G),SZK_(CS%G)+1) :: eta_por ! layer interface heights
+                                                    !! for porous topo. [Z ~> m or 1/eta_to_m]
 
   is = G%isc ; ie = G%iec ; js = G%jsc ; je = G%jec ; nz = GV%ke
-
   showCallTree = callTree_showQuery()
   if (showCallTree) call callTree_enter("step_MOM_thermo(), MOM.F90")
 
@@ -3620,20 +3615,12 @@ subroutine MOM_end(CS)
 
   if (CS%use_ALE_algorithm) call ALE_end(CS%ALE_CSp)
 
-  !sjd deallocate porous barrier variables
+  !deallocate porous topography variables
   DEALLOC_(CS%por_face_areaU) ; DEALLOC_(CS%por_face_areaV)
   DEALLOC_(CS%por_layer_widthU) ; DEALLOC_(CS%por_layer_widthV)
 
-  if (associated(CS%tv%T)) then
-    DEALLOC_(CS%T) ; CS%tv%T => NULL() ; DEALLOC_(CS%S) ; CS%tv%S => NULL()
-  endif
-  if (associated(CS%tv%frazil)) deallocate(CS%tv%frazil)
-  if (associated(CS%tv%salt_deficit)) deallocate(CS%tv%salt_deficit)
-  if (associated(CS%Hml)) deallocate(CS%Hml)
-
   ! NOTE: Allocated in PressureForce_FV_Bouss
   if (associated(CS%tv%varT)) deallocate(CS%tv%varT)
-
 
   call tracer_advect_end(CS%tracer_adv_CSp)
   call tracer_hor_diff_end(CS%tracer_diff_CSp)

@@ -185,7 +185,6 @@ type, public :: ocean_grid_type
   real :: len_lon = 0.  !< The longitudinal (or x-coord) extent of physical domain
   real :: Rad_Earth = 6.378e6 !< The radius of the planet [m].
   real :: max_depth     !< The maximum depth of the ocean in depth units [Z ~> m].
-
 end type ocean_grid_type
 
 contains

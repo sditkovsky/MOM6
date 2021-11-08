@@ -1047,7 +1047,6 @@ subroutine reset_face_lengths_list(G, param_file, US)
 
   endif
 
-
   do j=jsd,jed ; do I=IsdB,IedB
     lat = G%geoLatCu(I,j) ; lon = G%geoLonCu(I,j)
     if (check_360) then ; lon_p = lon+len_lon ; lon_m = lon-len_lon
@@ -1065,7 +1064,6 @@ subroutine reset_face_lengths_list(G, param_file, US)
         G%porous_DavgU(I,j) = Davg_u(npt)
 
         if (j>=G%jsc .and. j<=G%jec .and. I>=G%isc .and. I<=G%iec) then ! Limit messages/checking to compute domain
-
           if ( G%mask2dCu(I,j) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCu=0 at ",lat,lon," (",&
                 u_lat(1,npt), u_lat(2,npt), u_lon(1,npt), u_lon(2,npt),") so grid metric is unmodified."
@@ -1097,13 +1095,10 @@ subroutine reset_face_lengths_list(G, param_file, US)
           (((lon >= v_lon(1,npt)) .and. (lon <= v_lon(2,npt))) .or. &
            ((lon_p >= v_lon(1,npt)) .and. (lon_p <= v_lon(2,npt))) .or. &
            ((lon_m >= v_lon(1,npt)) .and. (lon_m <= v_lon(2,npt)))) ) then
-
         G%dx_Cv(i,J) = G%mask2dCv(i,J) * m_to_L*min(L_to_m*G%dxCv(i,J), max(v_width(npt), 0.0))
-
         G%porous_DminV(i,J) = Dmin_v(npt)
         G%porous_DmaxV(i,J) = Dmax_v(npt)
         G%porous_DavgV(i,J) = Davg_v(npt)
-
         if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain
           if ( G%mask2dCv(i,J) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCv=0 at ",lat,lon," (",&

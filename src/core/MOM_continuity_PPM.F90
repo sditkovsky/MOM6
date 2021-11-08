@@ -93,7 +93,7 @@ subroutine continuity_PPM(u, v, hin, h, uh, vh, dt, G, GV, US, CS, OBC, pbv, uhb
   type(unit_scale_type),   intent(in)    :: US  !< A dimensional unit scaling type
   type(continuity_PPM_CS), pointer       :: CS  !< Module's control structure.
   type(ocean_OBC_type),    pointer       :: OBC !< Open boundaries control structure.
-  type(porous_barrier_ptrs), intent(in) :: pbv  !< pointers to porous barrier fractional cell metrics
+  type(porous_barrier_ptrs), intent(in)  :: pbv !< pointers to porous barrier fractional cell metrics
   real, dimension(SZIB_(G),SZJ_(G)), &
                  optional, intent(in)    :: uhbt !< The summed volume flux through zonal faces
                                                  !! [H L2 T-1 ~> m3 s-1 or kg s-1].
@@ -273,7 +273,6 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
   logical :: local_Flather_OBC, local_open_BC, is_simple
   type(OBC_segment_type), pointer :: segment => NULL()
 
-
   use_visc_rem = present(visc_rem_u)
   local_specified_BC = .false. ; set_BT_cont = .false. ; local_Flather_OBC = .false.
   local_open_BC = .false.
@@ -438,6 +437,7 @@ subroutine zonal_mass_flux(u, h_in, uh, dt, G, GV, US, CS, LB, OBC, por_face_are
         call zonal_flux_adjust(u, h_in, h_L, h_R, uhbt(:,j), uh_tot_0, duhdu_tot_0, du, &
                                du_max_CFL, du_min_CFL, dt, G, GV, US, CS, visc_rem, &
                                j, ish, ieh, do_I, por_face_areaU, uh, OBC=OBC)
+
         if (present(u_cor)) then ; do k=1,nz
           do I=ish-1,ieh ; u_cor(I,j,k) = u(I,j,k) + du(I) * visc_rem(I,k) ; enddo
           if (local_specified_BC) then ; do I=ish-1,ieh
@@ -558,7 +558,6 @@ subroutine zonal_flux_layer(u, h, h_L, h_R, uh, duhdu, visc_rem, dt, G, US, j, &
   integer :: i
   integer :: l_seg
   logical :: local_open_BC
-
 
   local_open_BC = .false.
   if (present(OBC)) then ; if (associated(OBC)) then
@@ -949,6 +948,7 @@ subroutine set_zonal_BT_cont(u, h_in, h_L, h_R, BT_cont, uh_tot_0, duhdu_tot_0, 
   call zonal_flux_adjust(u, h_in, h_L, h_R, zeros, uh_tot_0, duhdu_tot_0, du0, &
                          du_max_CFL, du_min_CFL, dt, G, GV, US, CS, visc_rem, &
                          j, ish, ieh, do_I, por_face_areaU)
+
   ! Determine the westerly- and easterly- fluxes.  Choose a sufficiently
   ! negative velocity correction for the easterly-flux, and a sufficiently
   ! positive correction for the westerly-flux.
@@ -1042,7 +1042,7 @@ subroutine meridional_mass_flux(v, h_in, vh, dt, G, GV, US, CS, LB, OBC, por_fac
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)),  intent(in)    :: h_in !< Layer thickness used to
                                                                     !! calculate fluxes [H ~> m or kg m-2]
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)), intent(out)   :: vh   !< Volume flux through meridional
-                                                                   !! faces = v*h*dx [H m2 s-1 ~> m3 s-1 or kg s-1].
+                                                                    !! faces = v*h*dx [H m2 s-1 ~> m3 s-1 or kg s-1].
   real,                                       intent(in)    :: dt   !< Time increment [T ~> s].
   type(unit_scale_type),                      intent(in)    :: US   !< A dimensional unit scaling type
   type(continuity_PPM_CS),                    pointer       :: CS   !< This module's control structure.G
@@ -1540,16 +1540,16 @@ end subroutine merid_face_thickness
 subroutine meridional_flux_adjust(v, h_in, h_L, h_R, vhbt, vh_tot_0, dvhdv_tot_0, &
                              dv, dv_max_CFL, dv_min_CFL, dt, G, GV, US, CS, visc_rem, &
                              j, ish, ieh, do_I_in, por_face_areaV, vh_3d, OBC)
-  type(ocean_grid_type),  intent(inout)  :: G   !< Ocean's grid structure.
+  type(ocean_grid_type),   intent(inout) :: G    !< Ocean's grid structure.
   type(verticalGrid_type), intent(in)    :: GV   !< Ocean's vertical grid structure.
   real, dimension(SZI_(G),SZJB_(G),SZK_(GV)), &
-                         intent(in)      :: v    !< Meridional velocity [L T-1 ~> m s-1].
+                           intent(in)    :: v    !< Meridional velocity [L T-1 ~> m s-1].
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
-                         intent(in)      :: h_in !< Layer thickness used to calculate fluxes [H ~> m or kg m-2].
+                           intent(in)    :: h_in !< Layer thickness used to calculate fluxes [H ~> m or kg m-2].
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)),&
-                         intent(in)      :: h_L  !< Left thickness in the reconstruction [H ~> m or kg m-2].
+                           intent(in)    :: h_L  !< Left thickness in the reconstruction [H ~> m or kg m-2].
   real, dimension(SZI_(G),SZJ_(G),SZK_(GV)), &
-                         intent(in)      :: h_R  !< Right thickness in the reconstruction [H ~> m or kg m-2].
+                           intent(in)    :: h_R  !< Right thickness in the reconstruction [H ~> m or kg m-2].
   real, dimension(SZI_(G),SZK_(GV)), intent(in) :: visc_rem
                              !< Both the fraction of the momentum originally
                              !! in a layer that remains after a time-step of viscosity, and the
@@ -1769,6 +1769,7 @@ subroutine set_merid_BT_cont(v, h_in, h_L, h_R, BT_cont, vh_tot_0, dvhdv_tot_0, 
   call meridional_flux_adjust(v, h_in, h_L, h_R, zeros, vh_tot_0, dvhdv_tot_0, dv0, &
                          dv_max_CFL, dv_min_CFL, dt, G, GV, US, CS, visc_rem, &
                          j, ish, ieh, do_I, por_face_areaV)
+
   !   Determine the southerly- and northerly- fluxes.  Choose a sufficiently
   ! negative velocity correction for the northerly-flux, and a sufficiently
   ! positive correction for the southerly-flux.
