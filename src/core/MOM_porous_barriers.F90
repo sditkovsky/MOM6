@@ -67,8 +67,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   do I=IsdB,IedB; do j=jsd,jed
      if (G%porous_DavgU(I,j) < 0.) then
         do K = nk+1,1,-1
-           !eta_s = max(eta(I,j,K), eta(I+1,j,K)) !take shallower layer height
-           eta_s = 0.5 * (US%Z_to_m*eta(I,j,K) + US%Z_to_m*eta(I+1,j,K)) !take arithmetic mean
+           eta_s = max(US%Z_to_m*eta(I,j,K), US%Z_to_m*eta(I+1,j,K)) !take shallower layer height
+           !eta_s = 0.5 * (US%Z_to_m*eta(I,j,K) + US%Z_to_m*eta(I+1,j,K)) !take arithmetic mean
            if (eta_s <= G%porous_DminU(I,j)) then
               pbv%por_layer_widthU(I,j,K) = 0.0
               A_layer_prev = 0.0
@@ -79,8 +79,11 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthU(I,j,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/&
-                 (eta_s-eta_prev)
+                 if ((eta_s - eta_prev) > 0.0) then
+                   pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/&
+                   (eta_s-eta_prev)
+                 else
+                   pbv%por_face_areaU(I,j,k) = 0.0; endif
               endif
                eta_prev = eta_s
                A_layer_prev = A_layer
@@ -90,8 +93,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
   do i=isd,ied; do J=JsdB,JedB
      if (G%porous_DavgV(i,J) < 0.) then
         do K = nk+1,1,-1
-           !eta_s = max(eta(i,J,K), eta(i,J+1,K)) !take shallower layer height
-           eta_s = 0.5 * (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i,J+1,K)) !take arithmetic mean
+           eta_s = max(US%Z_to_m*eta(i,J,K), US%Z_to_m*eta(i,J+1,K)) !take shallower layer height
+           !eta_s = 0.5 * (US%Z_to_m*eta(i,J,K) + US%Z_to_m*eta(i,J+1,K)) !take arithmetic mean
            if (eta_s <= G%porous_DminV(i,J)) then
               pbv%por_layer_widthV(i,J,K) = 0.0
               A_layer_prev = 0.0
@@ -102,8 +105,11 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
                    eta_s, w_layer, A_layer)
               pbv%por_layer_widthV(i,J,K) = w_layer
               if (k <= nk) then
-                 pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/&
-                 (eta_s-eta_prev)
+                 if ((eta_s - eta_prev) > 0.0) then
+                   pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/&
+                   (eta_s-eta_prev)
+                 else
+                   pbv%por_face_areaU(I,j,k) = 0.0; endif
               endif
                eta_prev = eta_s
                A_layer_prev = A_layer
