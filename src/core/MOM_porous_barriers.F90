@@ -90,7 +90,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           A_layer_prev = A_layer
         endif
       enddo
-    endif 
+    endif
   enddo; enddo
 
   do i=isd,ied; do J=JsdB,JedB
@@ -116,9 +116,9 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           endif
           eta_prev = eta_s
           A_layer_prev = A_layer
-        endif 
+        endif
       enddo
-    endif 
+    endif
   enddo; enddo
 
 end subroutine por_widths
