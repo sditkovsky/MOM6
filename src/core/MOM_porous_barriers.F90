@@ -76,8 +76,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           if (K < nk+1) then
             pbv%por_face_areaU(I,j,k) = 0.0; endif
         else
-          call calc_por_layer(G%porous_DminU(I,j), G%porous_DmaxU(I,j), G%porous_DavgU(I,j),&
-                   eta_s, w_layer, A_layer)
+          call calc_por_layer(US%Z_to_m*G%porous_DminU(I,j), US%Z_to_m*G%porous_DmaxU(I,j), &
+            US%Z_to_m*G%porous_DavgU(I,j), eta_s, w_layer, A_layer)
           pbv%por_layer_widthU(I,j,K) = w_layer
           if (k <= nk) then
             if ((eta_s - eta_prev) > 0.0) then
@@ -104,8 +104,8 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           if (K < nk+1) then
             pbv%por_face_areaV(i,J,k) = 0.0; endif
         else
-          call calc_por_layer(G%porous_DminV(i,J), G%porous_DmaxV(i,J), G%porous_DavgV(i,J),&
-                   eta_s, w_layer, A_layer)
+          call calc_por_layer(US%Z_to_m*G%porous_DminV(i,J), US%Z_to_m*G%porous_DmaxV(i,J), &
+            US%Z_to_m*G%porous_DavgV(i,J), eta_s, w_layer, A_layer)
           pbv%por_layer_widthV(i,J,K) = w_layer
           if (k <= nk) then
             if ((eta_s - eta_prev) > 0.0) then
