@@ -1061,9 +1061,9 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_m >= u_lon(1,npt)) .and. (lon_m <= u_lon(2,npt)))) ) then
 
         G%dy_Cu(I,j) = G%mask2dCu(I,j) * m_to_L*min(L_to_m*G%dyCu(I,j), max(u_width(npt), 0.0))
-        G%porous_DminU(I,j) = m_to_Z*Dmin_u(npt) - G%Z_ref
-        G%porous_DmaxU(I,j) = m_to_Z*Dmax_u(npt) - G%Z_ref
-        G%porous_DavgU(I,j) = m_to_Z*Davg_u(npt) - G%Z_ref
+        G%porous_DminU(I,j) = m_to_Z*Dmin_u(npt)
+        G%porous_DmaxU(I,j) = m_to_Z*Dmax_u(npt)
+        G%porous_DavgU(I,j) = m_to_Z*Davg_u(npt)
 
         if (j>=G%jsc .and. j<=G%jec .and. I>=G%isc .and. I<=G%iec) then ! Limit messages/checking to compute domain
           if ( G%mask2dCu(I,j) == 0.0 )  then
@@ -1098,9 +1098,9 @@ subroutine reset_face_lengths_list(G, param_file, US)
            ((lon_p >= v_lon(1,npt)) .and. (lon_p <= v_lon(2,npt))) .or. &
            ((lon_m >= v_lon(1,npt)) .and. (lon_m <= v_lon(2,npt)))) ) then
         G%dx_Cv(i,J) = G%mask2dCv(i,J) * m_to_L*min(L_to_m*G%dxCv(i,J), max(v_width(npt), 0.0))
-        G%porous_DminV(i,J) = m_to_Z*Dmin_v(npt) - G%Z_ref
-        G%porous_DmaxV(i,J) = m_to_Z*Dmax_v(npt) - G%Z_ref
-        G%porous_DavgV(i,J) = m_to_Z*Davg_v(npt) - G%Z_ref
+        G%porous_DminV(i,J) = m_to_Z*Dmin_v(npt)
+        G%porous_DmaxV(i,J) = m_to_Z*Dmax_v(npt)
+        G%porous_DavgV(i,J) = m_to_Z*Davg_v(npt)
         if (i>=G%isc .and. i<=G%iec .and. J>=G%jsc .and. J<=G%jec) then ! Limit messages/checking to compute domain
           if ( G%mask2dCv(i,J) == 0.0 )  then
             write(stdout,'(A,2F8.2,A,4F8.2,A)') "read_face_lengths_list : G%mask2dCv=0 at ",lat,lon," (",&
