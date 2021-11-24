@@ -80,7 +80,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           if (k <= nk) then
             if ((eta_s - eta_prev) > 0.0) then
               pbv%por_face_areaU(I,j,k) = (A_layer - A_layer_prev)/&
-                   (eta_s-eta_prev)
+                   (US%Z_to_m*(eta_s-eta_prev))
             else
               pbv%por_face_areaU(I,j,k) = 0.0; endif
           endif
@@ -107,7 +107,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
           if (k <= nk) then
             if ((eta_s - eta_prev) > 0.0) then
               pbv%por_face_areaV(i,J,k) = (A_layer - A_layer_prev)/&
-                   (eta_s-eta_prev)
+                   (US%Z_to_m*(eta_s-eta_prev))
             else
               pbv%por_face_areaU(I,j,k) = 0.0; endif
           endif
@@ -121,7 +121,7 @@ subroutine por_widths(h, tv, G, GV, US, eta, pbv, eta_bt, halo_size, eta_to_m)
 end subroutine por_widths
 
 !> subroutine to calculate the profile fit for a single layer in a column
-subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
+subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer, Z_ref, Z_to_m)
 
   real,            intent(in)  :: D_min !< minimum topographic height [Z ~> m]
   real,            intent(in)  :: D_max !< maximum topographic height [Z ~> m]
@@ -136,17 +136,17 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
        psi_int             !integral of psi from 0 to zeta
 
   !three parameter fit from Adcroft 2013
-  m = (D_avg - D_min)/(D_max - D_min)
+  m = (Davg - Dmin)/(Dmax - Dmin)
   a = (1. - m)/m
 
-  zeta = (eta_layer - D_min)/(D_max - D_min)
+  zeta = (etam - Dmin)/(Dmax - Dmin)
 
-  if (eta_layer <= D_min) then
+  if (etam <= Dmin) then
     w_layer = 0.0
     A_layer = 0.0
-  elseif (eta_layer >= D_max) then
+  elseif (etam >= Dmax) then
     w_layer = 1.0
-    A_layer = eta_layer - D_avg
+    A_layer = etam - Davg
   else
     if (m < 0.5) then
       psi = zeta**(1./a)
@@ -159,7 +159,7 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer)
       psi_int = zeta - m + m*((1-zeta)**(1/m))
     endif
     w_layer = psi
-    A_layer = (D_max - D_min)*psi_int
+    A_layer = (Dmax - Dmin)*psi_int
   endif
 
 
