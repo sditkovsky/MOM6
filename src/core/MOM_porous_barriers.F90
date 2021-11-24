@@ -130,10 +130,10 @@ subroutine calc_por_layer(D_min, D_max, D_avg, eta_layer, w_layer, A_layer, Z_re
   real,            intent(out) :: w_layer !< frac. open interface width of current layer [nondim]
   real,            intent(out) :: A_layer !< frac. open face area of current layer [Z ~> m]
   real,            intent(in)  :: Z_ref !< reference value for geometric height fields [Z ~> m]
-  real,            intent(in)  :: Z_to_m !< a unit conversion factor from units of Z to m 
+  real,            intent(in)  :: Z_to_m !< a unit conversion factor from units of Z to m
   !local variables
   real Dmin, Dmax, Davg, & !copies of input topographic heights stored in [m]
-       etam, &             !copy of eta_layer stored in [m] 
+       etam, &             !copy of eta_layer stored in [m]
        m, a, &             !convenience constant for fit [nondim]
        zeta, &             !normalized vertical coordinate [nondim]
        psi, &              !fractional width of layer between Dmin and Dmax [nondim]
